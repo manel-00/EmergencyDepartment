@@ -183,9 +183,7 @@ const sendOTPVerificationEmail = async ({ _id, email }, res) => {
     try {
         const otp = `${Math.floor(1000 + Math.random() * 9000)}`; // Générer un OTP à 4 chiffres
 
-        // fx Log the OTP to the backend console
-console.log("Generated OTP (Backend):", otp);
-
+      
         const mailOptions = {
             from: process.env.AUTH_EMAIL,
             to: email,

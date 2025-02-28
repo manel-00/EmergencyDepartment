@@ -13,8 +13,7 @@ require('dotenv').config();
 // ✅ Active CORS avant de définir les routes
 app.use(cors({ 
   
-  //fx original one :origin: "http://localhost:3002",
-  origin: ["http://localhost:3001", "http://localhost:3002"], // ✅ Allow both
+  origin: "http://localhost:3002",
   credentials: true 
 }));
 
