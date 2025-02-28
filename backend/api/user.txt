@@ -1,0 +1,124 @@
+const express = require('express');
+const router = express.Router();
+const User = require('../models/User');
+const UserVerification = require('../models/UserVerification');
+const nodemailer = require('nodemailer');
+const bcrypt = require('bcrypt');
+const { v4: uuidv4 } = require('uuid');
+require('dotenv').config();
+const path = require('path');
+
+// 🔹 Configuration du transporteur Nodemailer
+let transporter = nodemailer.createTransport({
+    service: "gmail",
+    auth: {
+        user: process.env.AUTH_EMAIL,
+        pass: process.env.AUTH_PASS
+    }
+});
+
+// 🔹 Vérifier si le transporteur fonctionne
+transporter.verify((error, success) => {
+    if (error) console.log(error);
+    else console.log("Ready to send emails");
+});
+
+// ✅ **Route Inscription**
+router.post('/signup', (req, res) => {
+    let { name, lastname, role, email, password, creationDate } = req.body;
+
+    // Nettoyage des entrées
+    if (![name, lastname, role, email, password, creationDate].every(Boolean)) {
+        return res.json({ status: "failed", message: "Please fill all the fields" });
+    }
+
+    if (!/^[A-Za-z\s]+$/.test(name)) {
+        return res.json({ status: "failed", message: "Name should contain only letters" });
+    }
+
+    if (!/^[\w.-]+@[\w.-]+\.\w+$/.test(email)) {
+        return res.json({ status: "failed", message: "Invalid email address" });
+    }
+
+    // Vérifier si l'email existe déjà
+    User.findOne({ email }).then(existingUser => {
+        if (existingUser) {
+            return res.json({ status: "failed", message: "User already exists" });
+        }
+
+        // Hachage du mot de passe et enregistrement
+        bcrypt.hash(password, 10).then(hashedPassword => {
+            const newUser = new User({
+                name, lastname, role, email, password: hashedPassword,
+                creationDate: new Date(creationDate), verified: false
+            });
+
+            newUser.save().then(result => sendVerificationEmail(result, res))
+            .catch(err => res.json({ status: "failed", message: "Error saving user" }));
+        });
+    }).catch(err => res.json({ status: "failed", message: "Database error" }));
+});
+
+// ✅ **Envoyer email de vérification**
+const sendVerificationEmail = ({ _id, email }, res) => {
+    const uniqueString = uuidv4() + _id;
+    const mailOptions = {
+        from: process.env.AUTH_EMAIL,
+        to: email,
+        subject: "Verify your email",
+        html: `<p>Click <a href="http://localhost:3000/user/verify/${_id}/${uniqueString}">here</a> to verify your email.</p>`
+    };
+
+    bcrypt.hash(uniqueString, 10).then(hashedUniqueString => {
+        new UserVerification({ userId: _id, uniqueString: hashedUniqueString, createdAt: Date.now(), expiresAt: Date.now() + 21600000 })
+        .save().then(() => {
+            transporter.sendMail(mailOptions)
+            .then(() => res.json({ status: "PENDING", message: "Verification email sent" }))
+            .catch(err => res.json({ status: "failed", message: "Email send failed" }));
+        });
+    });
+};
+
+// ✅ **Route de vérification**
+router.get("/verify/:userId/:uniqueString", (req, res) => {
+    const { userId, uniqueString } = req.params;
+
+    UserVerification.findOne({ userId }).then(result => {
+        if (!result) return res.redirect(`/user/verified?error=true&message=Invalid link`);
+
+        bcrypt.compare(uniqueString, result.uniqueString).then(match => {
+            if (!match) return res.redirect(`/user/verified?error=true&message=Invalid verification`);
+
+            User.updateOne({ _id: userId }, { verified: true }).then(() => {
+                UserVerification.deleteOne({ userId }).then(() => {
+                    res.sendFile(path.join(__dirname, "../views/verified.html"));
+                });
+            });
+        });
+    });
+});
+
+// ✅ **Route de connexion**
+router.post('/signin', (req, res) => {
+    const { email, password } = req.body;
+
+    if (!email || !password) return res.json({ status: "failed", message: "Fill all fields" });
+
+    User.findOne({ email }).then(user => {
+        if (!user) return res.json({ status: "failed", message: "User not found" });
+        if (!user.verified) return res.json({ status: "failed", message: "Email not verified" });
+
+        bcrypt.compare(password, user.password).then(match => {
+            if (!match) return res.json({ status: "failed", message: "Invalid password" });
+
+            res.json({ status: "SUCCESS", message: "Login successful", user });
+        });
+    });
+});
+
+// ✅ **Route pour page vérifiée**
+router.get("/verified", (req, res) => {
+    res.sendFile(path.join(__dirname, "../views/verified.html"));
+});
+
+module.exports = router;
