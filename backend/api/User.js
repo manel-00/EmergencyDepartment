@@ -296,6 +296,20 @@ router.post("/verifyOTP", async (req, res) => {
         await User.updateOne({ _id: userId }, { verified: true });
         await UserOTPVerification.deleteMany({ userId });
 
+
+
+        
+
+// Store the user data in the session
+req.session.userId = userId;  // Store the user ID in the session
+req.session.email = otpRecords[0].email;  // Optionally store the user's email
+
+req.session.cookie.expires = new Date(Date.now() + 3600000); // Set session expiry in 1 hour
+
+
+
+
+
         res.json({
             status: "SUCCESS",
             message: "OTP verified successfully",
@@ -308,6 +322,43 @@ router.post("/verifyOTP", async (req, res) => {
         });
     }
 });
+
+
+router.post("/logout", (req, res) => {
+    req.session.destroy((err) => {
+        if (err) {
+            return res.json({ status: "failed", message: "Error logging out" });
+        }
+        res.json({ status: "SUCCESS", message: "Logged out successfully" });
+    });
+});
+
+
+// Authentication middleware to protect routes
+const isAuthenticated = (req, res, next) => {
+    if (!req.session.userId) {
+        return res.json({ status: "failed", message: "User is not logged in" });
+    }
+    next();
+};
+
+// Example of a protected route using the isAuthenticated middleware
+router.get("/userprofile", isAuthenticated, (req, res) => {
+    res.json({
+        status: "SUCCESS",
+        message: "This is a protected route. User is authenticated.",
+        userId: req.session.userId,
+        email: req.session.email,
+    });
+});
+
+
+
+
+
+
+
+
 
     // ✅ **Route de réinitialisation du mot de passe**
 // Password reset stuff

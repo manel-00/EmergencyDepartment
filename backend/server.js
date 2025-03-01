@@ -9,6 +9,29 @@ const app = express();
 const port = 3000;
 const UserRouter = require('./api/User');
 const specialiteRouter = require('./api/Specialite'); 
+
+//user sessions
+const MongoStore = require('connect-mongo'); // Optional, for storing sessions in MongoDB
+/*
+// Session Middleware
+app.use(session({
+  secret: process.env.SESSION_SECRET,  // Store secret key in .env
+  resave: false,
+  saveUninitialized: false,
+  cookie: { secure: process.env.NODE_ENV === "production" },  // Secure cookies in production (set 'secure: true' only for HTTPS)
+  store: MongoStore.create({
+      mongoUrl: process.env.MONGODB_URI, // MongoDB connection URI
+      collectionName: 'sessions'  // Where to store session data
+  })
+}));
+
+*/
+
+
+
+
+
+
 require('dotenv').config();
 // ✅ Active CORS avant de définir les routes
 app.use(cors({ 
