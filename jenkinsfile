@@ -1,7 +1,7 @@
 pipeline {
     agent any
     environment {
-        NPM_GLOBAL = "$HOME/npm-global" // or use /var/lib/jenkins/npm-global if preferred
+        NPM_GLOBAL = "/var/lib/jenkins/npm-global"  // Ensure it's the correct directory
     }
 
     stages {
@@ -31,9 +31,12 @@ pipeline {
         stage('Install nodemon globally') {
             steps {
                 script {
-                    sh 'npm config set prefix $NPM_GLOBAL' // set npm global directory
-                    sh 'export PATH=$PATH:$NPM_GLOBAL/bin' // update PATH
-                    sh 'npm install -g nodemon' // install nodemon globally
+                    // Ensure npm is configured with the correct prefix
+                    sh '''
+                    npm config set prefix $NPM_GLOBAL
+                    export PATH=$NPM_GLOBAL/bin:$PATH
+                    npm install -g nodemon
+                    '''
                 }
             }
         }
@@ -60,7 +63,6 @@ pipeline {
 
     post {
         always {
-            // This block will always run, regardless of success or failure
             echo 'This will always run, even if the build fails.'
         }
     }
