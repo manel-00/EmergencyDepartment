@@ -1,28 +1,41 @@
-pipeline{ 
-  agent any 
+pipeline {
+    agent any
 
+    stages {
+        stage('Checkout Code') { 
+            steps {
+                script {
+                    checkout([$class: 'GitSCM',
+                        branches: [[name: '*/admin']], 
+                        userRemoteConfigs: [[url: 'https://github.com/TaherBenIsmail/EmergencyDepartment.git']],
+                        extensions: [[$class: 'CloneOption', depth: 1]] la dernière version
+                    ])
+                }
+            }
+        }
 
-stages { 
-stage('Install dependencies') { 
-steps{ 
-script { 
-sh('npm install') 
-} 
-} 
-} 
-stage('Unit Test') { 
-steps{ 
-script { 
-sh('npm test') 
-} 
-} 
-} 
-stage('Build application') { 
-steps{ 
-script { 
-sh('nodemon server.js') 
-} } 
+        stage('Install dependencies') {
+            steps {
+                script {
+                    sh 'npm install'
+                }
+            }
+        }
 
-} 
-} 
-} 
+        stage('Unit Test') {
+            steps {
+                script {
+                    sh 'npm test'
+                }
+            }
+        }
+
+        stage('Build application') {
+            steps {
+                script {
+                    sh 'nodemon server.js'
+                }
+            }
+        }
+    }
+}
