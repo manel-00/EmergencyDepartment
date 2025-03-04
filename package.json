@@ -6,7 +6,9 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "test": "echo \"No tests specified\""
+
   },
   "dependencies": {
     "@ckeditor/ckeditor5-build-classic": "^44.2.1",
