@@ -1,7 +1,7 @@
 pipeline {
     agent any
     environment {
-        NPM_GLOBAL = "$HOME/npm-global"
+        NPM_GLOBAL = "$HOME/npm-global" // or use /var/lib/jenkins/npm-global if preferred
     }
 
     stages {
@@ -31,16 +31,16 @@ pipeline {
         stage('Install nodemon globally') {
             steps {
                 script {
-                    sh 'npm config set prefix $NPM_GLOBAL'
-                    sh 'export PATH=$PATH:$NPM_GLOBAL/bin'
-                    sh 'npm install -g nodemon'
+                    sh 'npm config set prefix $NPM_GLOBAL' // set npm global directory
+                    sh 'export PATH=$PATH:$NPM_GLOBAL/bin' // update PATH
+                    sh 'npm install -g nodemon' // install nodemon globally
                 }
             }
         }
 
         stage('Unit Test') {
             when {
-                expression { false }
+                expression { false }  // Skip this stage for now
             }
             steps {
                 script {
@@ -60,10 +60,8 @@ pipeline {
 
     post {
         always {
-            // Always run this cleanup or logging step after pipeline execution
+            // This block will always run, regardless of success or failure
             echo 'This will always run, even if the build fails.'
-            // Example: Clean up npm global directory or other necessary tasks
-            // sh 'rm -rf $NPM_GLOBAL'
         }
     }
 }
