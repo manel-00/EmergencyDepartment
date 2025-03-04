@@ -1,7 +1,6 @@
 pipeline {
     agent any
     environment {
-        // Ensure the npm global path is added to the system's PATH
         NPM_GLOBAL = "$HOME/npm-global"
     }
 
@@ -32,13 +31,8 @@ pipeline {
         stage('Install nodemon globally') {
             steps {
                 script {
-                    // Configure npm to use a custom directory for global packages
                     sh 'npm config set prefix $NPM_GLOBAL'
-
-                    // Update PATH to include the new directory for global npm packages
                     sh 'export PATH=$PATH:$NPM_GLOBAL/bin'
-                    
-                    // Install nodemon globally in the custom directory
                     sh 'npm install -g nodemon'
                 }
             }
@@ -46,7 +40,7 @@ pipeline {
 
         stage('Unit Test') {
             when {
-                expression { false }  // You can adjust the condition here to skip based on your needs
+                expression { false }
             }
             steps {
                 script {
@@ -66,7 +60,9 @@ pipeline {
 
     post {
         always {
-            // Optional: Clean up npm-global directory
+            // Always run this cleanup or logging step after pipeline execution
+            echo 'This will always run, even if the build fails.'
+            // Example: Clean up npm global directory or other necessary tasks
             // sh 'rm -rf $NPM_GLOBAL'
         }
     }
