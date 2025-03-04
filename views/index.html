@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Home Page</title>
+</head>
+<body>
+  <h1>Welcome to the Home Page!</h1>
+
+  <!-- Facebook SDK for JavaScript -->
+  <script>
+    window.fbAsyncInit = function() {
+      FB.init({
+        appId      : '662431039455206',  // Replace with your actual Facebook App ID
+        cookie     : true,
+        xfbml      : true,
+        version    : 'v10.0'  // Replace with the version you are using
+      });
+        
+      FB.AppEvents.logPageView();   
+    };
+
+    (function(d, s, id){
+       var js, fjs = d.getElementsByTagName(s)[0];
+       if (d.getElementById(id)) {return;}
+       js = d.createElement(s); js.id = id;
+       js.src = "https://connect.facebook.net/en_US/sdk.js";
+       fjs.parentNode.insertBefore(js, fjs);
+     }(document, 'script', 'facebook-jssdk'));
+
+    // Check login status
+    function checkLoginState() {
+      FB.getLoginStatus(function(response) {
+        statusChangeCallback(response);
+      });
+    }
+
+    function statusChangeCallback(response) {
+      console.log(response);
+      if (response.status === 'connected') {
+        // Logged into your app and Facebook.
+        console.log('User is logged in and authenticated');
+      } else {
+        // The person is not logged into your app or we are unable to tell.
+        console.log('User is not authenticated');
+      }
+    }
+  </script>
+
+  <!-- Add a button to trigger Facebook login -->
+  <button onclick="checkLoginState()">Check Facebook Login Status</button>
+</body>
+</html>
