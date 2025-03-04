@@ -25,6 +25,14 @@ pipeline {
             }
         }
 
+        stage('Install nodemon') {
+            steps {
+                script {
+                    sh 'npm install -g nodemon'
+                }
+            }
+        }
+
         stage('Unit Test') {
             steps {
                 script {
