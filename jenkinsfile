@@ -8,7 +8,7 @@ pipeline {
                     checkout([$class: 'GitSCM',
                         branches: [[name: '*/admin']], 
                         userRemoteConfigs: [[url: 'https://github.com/TaherBenIsmail/EmergencyDepartment.git']],
-                        extensions: [[$class: 'CloneOption', depth: 1]] la dernière version
+                        extensions: [[$class: 'CloneOption', depth: 1]] // ✅ Suppression du texte incorrect
                     ])
                 }
             }
