@@ -25,10 +25,10 @@ pipeline {
             }
         }
 
-        stage('Install nodemon') {
+        stage('Install nodemon locally') {
             steps {
                 script {
-            sh 'sudo npm install -g nodemon'
+                    sh 'npm install --save-dev nodemon'
                 }
             }
         }
