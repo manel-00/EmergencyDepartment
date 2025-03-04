@@ -1,0 +1,52 @@
+pipeline {
+    agent any
+
+    stages {
+        stage('Checkout Code') { 
+            steps {
+                script {
+                    checkout([$class: 'GitSCM',
+                        branches: [[name: '*/admin']], 
+                        userRemoteConfigs: [[
+                            url: 'https://github.com/TaherBenIsmail/EmergencyDepartment.git',
+                            credentialsId: 'anasjraidi' 
+                        ]],
+                        extensions: [[$class: 'CloneOption', depth: 1]] 
+                    ])
+                }
+            }
+        }
+
+        stage('Install dependencies') {
+            steps {
+                script {
+                    sh 'npm install'
+                }
+            }
+        }
+
+        stage('Install nodemon locally') {
+            steps {
+                script {
+                    sh 'npm install --save-dev nodemon'
+                }
+            }
+        }
+
+        stage('Unit Test') {
+            steps {
+                script {
+                    sh 'npm test'
+                }
+            }
+        }
+
+        stage('Build application') {
+            steps {
+                script {
+                    sh 'nodemon server.js'
+                }
+            }
+        }
+    }
+}
