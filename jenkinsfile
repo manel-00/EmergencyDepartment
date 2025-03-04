@@ -6,7 +6,7 @@ pipeline {
             steps {
                 script {
                     checkout([$class: 'GitSCM',
-                        branches: [[name: '*/admin']], 
+                        branches: [[name: '*/backend']], 
                         userRemoteConfigs: [[
                             url: 'https://github.com/TaherBenIsmail/EmergencyDepartment.git',
                             credentialsId: 'anasjraidi' 
