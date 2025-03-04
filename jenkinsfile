@@ -7,8 +7,11 @@ pipeline {
                 script {
                     checkout([$class: 'GitSCM',
                         branches: [[name: '*/admin']], 
-                        userRemoteConfigs: [[url: 'https://github.com/TaherBenIsmail/EmergencyDepartment.git']],
-                        extensions: [[$class: 'CloneOption', depth: 1]] // ✅ Suppression du texte incorrect
+                        userRemoteConfigs: [[
+                            url: 'https://github.com/TaherBenIsmail/EmergencyDepartment.git',
+                            credentialsId: 'anasjraidi' 
+                        ]],
+                        extensions: [[$class: 'CloneOption', depth: 1]] 
                     ])
                 }
             }
