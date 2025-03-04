@@ -21,17 +21,11 @@ pipeline {
             steps {
                 script {
                     sh 'npm install'
-                    sh 'npm install -g nodemon' // Install nodemon globally
                 }
             }
         }
 
         stage('Unit Test') {
-            when {
-                expression {
-                    return fileExists('test') || fileExists('test/**/*.js')  // Check if any test folder or files exist
-                }
-            }
             steps {
                 script {
                     sh 'npx mocha'
@@ -42,7 +36,7 @@ pipeline {
         stage('Build application') {
             steps {
                 script {
-                    sh 'nodemon server.js'
+                    sh 'nodemon server.js' // This will use the locally installed version of nodemon
                 }
             }
         }
