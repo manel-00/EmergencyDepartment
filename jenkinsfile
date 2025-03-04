@@ -1,7 +1,7 @@
 pipeline {
     agent any
     environment {
-        NPM_GLOBAL = "/var/lib/jenkins/npm-global"  // Ensure it's the correct directory
+        NPM_GLOBAL = "/var/lib/jenkins/npm-global"  // Custom path for global npm packages
     }
 
     stages {
@@ -35,7 +35,7 @@ pipeline {
                     sh '''
                     npm config set prefix $NPM_GLOBAL
                     export PATH=$NPM_GLOBAL/bin:$PATH
-                    npm install -g nodemon
+                    npm install -g nodemon --unsafe-perm=true
                     '''
                 }
             }
