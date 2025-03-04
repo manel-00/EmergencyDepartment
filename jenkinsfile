@@ -28,7 +28,7 @@ pipeline {
         stage('Install nodemon') {
             steps {
                 script {
-                    sh 'npm install -g nodemon'
+            sh 'sudo npm install -g nodemon'
                 }
             }
         }
