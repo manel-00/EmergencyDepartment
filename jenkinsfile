@@ -25,13 +25,7 @@ pipeline {
             }
         }
 
-        stage('Install nodemon locally') {
-            steps {
-                script {
-                    sh 'npm install --save-dev nodemon'
-                }
-            }
-        }
+       
 
         stage('Unit Test') {
             steps {
