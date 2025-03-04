@@ -59,6 +59,19 @@ export default function Sidebar({manuClass}){
                             </div>
                         </li>
 
+
+                        <li className={`sidebar-dropdown ms-0 ${["/view-specialities","/add-speciality","/doctors-item"].includes(manu)? "active" : ""}`}>
+                            <Link href="#" onClick={(e)=>{setSubManu(subManu === "/view-specialities-item" ? "" : "/view-specialities-item")}}><LuUser2 className="me-2 d-inline-block mb-0 icon"/>Specialities</Link>
+                            <div className={`sidebar-submenu ${["/doctors","/add-doctor","/dr-profile","/view-specialities-item"].includes(subManu)? "d-block" : ""}`}>
+                                <ul>
+                                    <li className={`${manu === "/doctors" ? "active" : ""} ms-0`}><Link href="/view-specialities">Specialities</Link></li>
+                                    <li className={`${manu === "/add-doctor" ? "active" : ""} ms-0`}><Link href="/add-speciality">Add Specialities</Link></li>
+                                </ul>
+                            </div>
+                        </li>
+
+
+
                         <li className={`sidebar-dropdown ms-0 ${["/patients","/add-patient","/patient-profile","/patient-item"].includes(manu)? "active" : ""}`}>
                             <Link href="#" onClick={(e)=>{setSubManu(subManu === '/patient-item' ? '' : '/patient-item')}}><PiWheelchairFill className="me-2 d-inline-block mb-0 icon"/>Patients</Link>
                             <div className={`sidebar-submenu ${["/patients","/add-patient","/patient-profile","/patient-item"].includes(subManu)? "d-block" : ""}`}>

@@ -1,6 +1,6 @@
 import { Inter } from 'next/font/google'
-import './assets/scss/style-dark.scss'
-import './assets/scss/bootstrap-dark.scss'
+import './assets/scss/style.scss'
+import './assets/scss/bootstrap.scss'
 import './assets/css/materialdesignicons.min.css'
 
 const inter = Inter({ 

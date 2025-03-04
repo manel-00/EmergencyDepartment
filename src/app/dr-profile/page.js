@@ -3,7 +3,6 @@ import Link from "next/link";
 import Image from "next/image";
 
 import Wrapper from "../components/wrapper";
-import ProfileTab from "../components/profileTab";
 
 export default function DrProfile(){
     return(
@@ -33,7 +32,7 @@ export default function DrProfile(){
                         </div>
                         
                         <div className="row">
-                            <ProfileTab/>
+                          
                         </div>
                     </div>
                 </div>
