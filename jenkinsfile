@@ -25,9 +25,12 @@ pipeline {
             }
         }
 
-       
-
         stage('Unit Test') {
+            when {
+                expression {
+                    return fileExists('test') || fileExists('test/**/*.js')  // Check if any test folder or files exist
+                }
+            }
             steps {
                 script {
                     sh 'npx mocha'
