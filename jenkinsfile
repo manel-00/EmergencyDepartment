@@ -25,6 +25,14 @@ pipeline {
             }
         }
 
+        stage('Install nodemon globally') {
+            steps {
+                script {
+                    sh 'npm install -g nodemon'
+                }
+            }
+        }
+
         stage('Unit Test') {
             when {
                 expression { false }  // Skip this stage
