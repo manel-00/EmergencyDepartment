@@ -1,54 +1,32 @@
 pipeline {
     agent any
-
     stages {
         stage('Checkout Code') {
             steps {
-                script {
-                    checkout([$class: 'GitSCM',
-                        branches: [[name: '*/backend']], 
-                        userRemoteConfigs: [[
-                            url: 'https://github.com/TaherBenIsmail/EmergencyDepartment.git',
-                            credentialsId: 'anasjraidi'
-                        ]],
-                        extensions: [[$class: 'CloneOption', depth: 1]]
-                    ])
-                }
+                checkout([
+                    $class: 'GitSCM',
+                    branches: [[name: '*/backend']],
+                    extensions: [],
+                    userRemoteConfigs: [[
+                        url: 'https://github.com/TaherBenIsmail/EmergencyDepartment.git',
+                        credentialsId: 'github-pat' // Use the credential ID here
+                    ]]
+                ])
             }
         }
-
         stage('Install dependencies') {
             steps {
-                script {
-                    sh 'npm install'
-                }
+                sh 'npm install'
             }
         }
-
-        stage('Install nodemon globally') {
-            steps {
-                script {
-                    sh 'npm install -g nodemon'
-                }
-            }
-        }
-
         stage('Unit Test') {
-            when {
-                expression { false }  // Skip this stage
-            }
             steps {
-                script {
-                    sh 'npx mocha'
-                }
+                sh 'npm test'
             }
         }
-
         stage('Build application') {
             steps {
-                script {
-                    sh 'nodemon server.js'
-                }
+                sh 'npm run build'
             }
         }
     }
