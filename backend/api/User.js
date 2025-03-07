@@ -1,6 +1,9 @@
 const express = require('express');
 const router = express.Router();
 const User = require('../models/User');
+const jwt = require('jsonwebtoken');
+const authenticate = require('../middleware/auth')
+
 const twilio = require('twilio');
 const passport = require('passport');
 const accountSid = 'AC8d70b037ecc2df3f2299aa02ab72d00d';
@@ -221,6 +224,12 @@ console.log("Generated OTP (Backend):", otp);
     }
 };
 
+
+//generate jwt
+const generateToken = (userId) => {
+    return jwt.sign({ userId }, process.env.JWT_SECRET, { expiresIn: '5h' }); // Token expires in 5 hour
+};
+
 // Route de connexion avec OTP
 router.post('/signin', async (req, res) => {
     const { email, password } = req.body;
@@ -247,12 +256,14 @@ router.post('/signin', async (req, res) => {
             return res.json({ status: "failed", message: "Invalid password" });
         }
 
+        const token = generateToken(user._id);
+
         // Vérification de l'OTP existant
         const otpRecord = await UserOTPVerification.findOne({ userId: user._id });
 
         if (otpRecord && otpRecord.expiresAt > Date.now()) {
             // OTP valide déjà envoyé, renvoyer le statut
-            return res.json({ status: "PENDING", message: "OTP already sent to email", data: { userId: user._id, email: user.email } });
+            return res.json({ status: "PENDING", message: "OTP already sent to email", data: { userId: user._id, email: user.email,token:token } });
         } else {
             // Pas d'OTP valide ou OTP expiré, envoyer un nouvel OTP
             return sendOTPVerificationEmail({ _id: user._id, email: user.email }, res);
@@ -261,6 +272,11 @@ router.post('/signin', async (req, res) => {
         console.error("❌ Error during signin:", error);
         res.json({ status: "failed", message: "Error during signin" });
     }
+
+
+
+
+
 });
 
 // Route pour vérifier l'OTP
@@ -334,6 +350,36 @@ router.post("/logout", (req, res) => {
 });
 
 
+// Protected route v1
+/*
+router.get("/userprofile", authenticate, (req, res) => {
+    // Access user data from the middleware
+    res.json({ userId: req.user.userId, email: req.user.email });
+  });*/
+
+  router.get("/userprofile", authenticate, async (req, res) => {
+    try {
+        const user = await User.findById(req.user.userId).select("name email role lastname image creationDate  "); // Get name and email from DB
+        if (!user) {
+            return res.status(404).json({ message: "User not found" });
+        }
+
+        res.json({
+            userId: req.user.userId,
+            name: user.name,
+            lastname : user.lastname,
+            email: user.email,
+            role: user.role,
+            image: user.image,
+            creationDate: user.creationDate,
+
+        });
+    } catch (err) {
+        res.status(500).json({ message: "Server error" });
+    }
+});
+
+
 // Authentication middleware to protect routes
 const isAuthenticated = (req, res, next) => {
     if (!req.session.userId) {
@@ -343,17 +389,40 @@ const isAuthenticated = (req, res, next) => {
 };
 
 // Example of a protected route using the isAuthenticated middleware
-router.get("/userprofile", isAuthenticated, (req, res) => {
+/*router.get("/userprofile", isAuthenticated, (req, res) => {
+    console.log("Session Data:", req.session);  // Log the entire session object
+
     res.json({
         status: "SUCCESS",
         message: "This is a protected route. User is authenticated.",
         userId: req.session.userId,
         email: req.session.email,
     });
-});
+});*/
 
+// Get user by ID
+router.get("/getuser/:id", async (req, res) => {
+    try {
+      const user = await User.findById(req.params.id).select("-password"); // Exclude password
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+      res.json(user);
+    } catch (error) {
+      console.error("Error fetching user:", error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
 
-
+// Route to get session data (for testing purposes)
+router.get('/session', (req, res) => {
+    if (req.session.user) {
+      return res.status(200).json(req.session.user); // Send user data stored in the session
+    } else {
+      return res.status(200).json({ message: 'No session found' });
+    }
+  });
+  
 
 
 
