@@ -13,7 +13,6 @@ const userSchema = new mongoose.Schema({
     googleId: { type: String, unique: true, sparse: true }, // Google OAuth ID
     facebookId: { type: String, unique: true, sparse: true }, // Facebook OAuth ID
 });
-
 // Créer le modèle User basé sur le schéma
 const User = mongoose.model('User', userSchema);
 

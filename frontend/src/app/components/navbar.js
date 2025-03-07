@@ -238,7 +238,10 @@ export default function Navbar({navDark, manuClass,containerClass}){
                         </li>
 
                         <li className={`${["/aboutus", "/departments","/faqs", "/blogs","/blog-detail","/terms","/privacy","/error"].includes(manu)? "active" : ""} has-submenu parent-parent-menu-item`}><Link href="#">Pages</Link><span className="menu-arrow"></span>
-                          
+                        <ul className="submenu">
+                                <li className={manu === "/Profile" || "" ? "active" : ""}><Link href="/Profile" className="sub-menu-item">Profile</Link></li>
+                                <li className={manu === "/edit-profile" ? "active" : ""}><Link href="/edit-profile" className="sub-menu-item">Edit Profile</Link></li>
+                            </ul>
                         </li>
                     </ul>
                 </div>

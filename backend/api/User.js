@@ -7,7 +7,6 @@ const accountSid = 'AC8d70b037ecc2df3f2299aa02ab72d00d';
 const authToken = 'dce29d68b096bb59d31d78bc2d2a40c3';
 const client = new twilio(accountSid, authToken);
 const UserVerification = require('../models/UserVerification');
-//mongodb user otp verification model
 const UserOTPVerification = require("./../models/UserOTPVerification");
 const PasswordReset = require("./../models/PasswordReset");
 const nodemailer = require('nodemailer');
@@ -15,12 +14,11 @@ const bcrypt = require('bcrypt');
 const { v4: uuidv4 } = require('uuid');
 require('dotenv').config();
 const path = require('path');
-const path2 = require('path');
-
 const multer = require('multer');
 const fs = require('fs');
 const Specialite = require('../models/Specialite');
 require('../config/passport');
+
 // 🔹 Configuration du transporteur Nodemailer
 let transporter = nodemailer.createTransport({
     service: "gmail",
@@ -38,104 +36,101 @@ transporter.verify((error, success) => {
 
 const storage = multer.diskStorage({
     destination: (req, file, cb) => {
-      const frontendImagesPath = path.join(
-        'C:/Users/user/Downloads/themeforest-DxiLJvDj-doctris-react-nextjs-doctor-appointment-booking-system-admin-dashboard-template/Doctris_NextJs_v1.0.0/Doctris_NextJs/Landing/public/images'
-      );
-  
-      // Vérifie si le dossier existe, sinon le crée
-      if (!fs.existsSync(frontendImagesPath)) {
-        fs.mkdirSync(frontendImagesPath, { recursive: true });
-      }
-      cb(null, frontendImagesPath);  // Sauvegarde dans le dossier d'images frontend
+        const frontendImagesPath = path.join(
+            'C:/Users/user/Downloads/themeforest-DxiLJvDj-doctris-react-nextjs-doctor-appointment-booking-system-admin-dashboard-template/Doctris_NextJs_v1.0.0/Doctris_NextJs/Landing/public/images'
+        );
+
+        // Vérifie si le dossier existe, sinon le crée
+        if (!fs.existsSync(frontendImagesPath)) {
+            fs.mkdirSync(frontendImagesPath, { recursive: true });
+        }
+        cb(null, frontendImagesPath);  // Sauvegarde dans le dossier d'images frontend
     },
     filename: (req, file, cb) => {
-      const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-      cb(null, 'image-' + uniqueSuffix + path.extname(file.originalname)); // Nouveau nom pour l'image
+        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+        cb(null, 'image-' + uniqueSuffix + path.extname(file.originalname)); // Nouveau nom pour l'image
     }
-  });
+});
 
-  const storagedc = multer.diskStorage({
+const storagedc = multer.diskStorage({
     destination: (req, file, cb) => {
-      const frontendImagesPath = path2.join(
-        'C:/Users/user/Documents/Admin/public/images'
-      );
-  
-      // Vérifie si le dossier existe, sinon le crée
-      if (!fs.existsSync(frontendImagesPath)) {
-        fs.mkdirSync(frontendImagesPath, { recursive: true });
-      }
-      cb(null, frontendImagesPath);  // Sauvegarde dans le dossier d'images frontend
+        const frontendImagesPath = path.join(
+            'C:/Users/user/Documents/Admin/public/images'
+        );
+
+        // Vérifie si le dossier existe, sinon le crée
+        if (!fs.existsSync(frontendImagesPath)) {
+            fs.mkdirSync(frontendImagesPath, { recursive: true });
+        }
+        cb(null, frontendImagesPath);  // Sauvegarde dans le dossier d'images frontend
     },
     filename: (req, file, cb) => {
-      const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-      cb(null, 'image-' + uniqueSuffix + path2.extname(file.originalname)); // Nouveau nom pour l'image
+        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+        cb(null, 'image-' + uniqueSuffix + path.extname(file.originalname)); // Nouveau nom pour l'image
     }
-  });
+});
 
-  const upload = multer({ storage: storage });
-  const uploaddc = multer({ storage: storagedc });
+const upload = multer({ storage: storage });
+const uploaddc = multer({ storage: storagedc });
 
-
-  
-  // Route pour télécharger l'image
-  router.post('/uploadImage', upload.single('image'), (req, res) => {
+// Route pour télécharger l'image
+router.post('/uploadImage', upload.single('image'), (req, res) => {
     if (!req.file) {
-      return res.status(400).json({ message: 'No file uploaded' });
+        return res.status(400).json({ message: 'No file uploaded' });
     }
-    
+
     // URL de l'image stockée (renvoyer une URL relative)
     const imageUrl = `http://localhost:3001/images/${req.file.filename}`;
-    
+
     res.json({ message: 'Image uploaded successfully', imageUrl });
-  });
-  // Route de l'inscription
-  router.post('/signup', upload.single('image'), (req, res) => {
+});
+
+// Route de l'inscription
+router.post('/signup', upload.single('image'), (req, res) => {
     const { name, lastname, email, password, role, creationDate } = req.body;
-  
+
     // Vérifiez si tous les champs sont remplis, y compris l'image
     if (![name, lastname, email, password, role, creationDate].every(Boolean)) {
-      return res.json({ status: 'failed', message: 'Please fill all the fields' });
+        return res.json({ status: 'failed', message: 'Please fill all the fields' });
     }
-  
+
     if (!req.file) {
-      return res.json({ status: 'failed', message: 'Please upload an image' });
+        return res.json({ status: 'failed', message: 'Please upload an image' });
     }
-  
+
     if (!/^[A-Za-z\s]+$/.test(name)) {
-      return res.json({ status: 'failed', message: 'Name should contain only letters' });
+        return res.json({ status: 'failed', message: 'Name should contain only letters' });
     }
-  
+
     if (!/^[\w.-]+@[\w.-]+\.\w+$/.test(email)) {
-      return res.json({ status: 'failed', message: 'Invalid email address' });
+        return res.json({ status: 'failed', message: 'Invalid email address' });
     }
-  
+
     // Vérifier si l'email existe déjà
     User.findOne({ email }).then(existingUser => {
-      if (existingUser) {
-        return res.json({ status: 'failed', message: 'User already exists' });
-      }
-  
-      // Hachage du mot de passe et enregistrement
-      bcrypt.hash(password, 10).then(hashedPassword => {
-        const newUser = new User({
-          name,
-          lastname,
-          role,
-          email,
-          password: hashedPassword,
-          creationDate: new Date(creationDate),
-          verified: false,
-          image: req.file.path, // Enregistrer le chemin de l'image
+        if (existingUser) {
+            return res.json({ status: 'failed', message: 'User already exists' });
+        }
+
+        // Hachage du mot de passe et enregistrement
+        bcrypt.hash(password, 10).then(hashedPassword => {
+            const newUser = new User({
+                name,
+                lastname,
+                role,
+                email,
+                password: hashedPassword,
+                creationDate: new Date(creationDate),
+                verified: false,
+                image: req.file.path, // Enregistrer le chemin de l'image
+            });
+
+            newUser.save().then(result => {
+                sendVerificationEmail(result, res);
+            }).catch(err => res.json({ status: 'failed', message: 'Error saving user' }));
         });
-  
-        newUser.save().then(result => {
-          sendVerificationEmail(result, res);
-        }).catch(err => res.json({ status: 'failed', message: 'Error saving user' }));
-      });
     }).catch(err => res.json({ status: 'failed', message: 'Database error' }));
-  });
-
-
+});
 
 // ✅ **Envoyer email de vérification**
 const sendVerificationEmail = ({ _id, email }, res) => {
@@ -149,16 +144,13 @@ const sendVerificationEmail = ({ _id, email }, res) => {
 
     bcrypt.hash(uniqueString, 10).then(hashedUniqueString => {
         new UserVerification({ userId: _id, uniqueString: hashedUniqueString, createdAt: Date.now(), expiresAt: Date.now() + 21600000 })
-        .save().then(() => {
-            transporter.sendMail(mailOptions)
-            .then(() => res.json({ status: "PENDING", message: "Verification email sent" }))
-            .catch(err => res.json({ status: "failed", message: "Email send failed" }));
-        });
+            .save().then(() => {
+                transporter.sendMail(mailOptions)
+                    .then(() => res.json({ status: "PENDING", message: "Verification email sent" }))
+                    .catch(err => res.json({ status: "failed", message: "Email send failed" }));
+            });
     });
 };
-
-
-
 
 // ✅ **Route de vérification**
 router.get("/verify/:userId/:uniqueString", (req, res) => {
@@ -183,7 +175,6 @@ const sendOTPVerificationEmail = async ({ _id, email }, res) => {
     try {
         const otp = `${Math.floor(1000 + Math.random() * 9000)}`; // Générer un OTP à 4 chiffres
 
-      
         const mailOptions = {
             from: process.env.AUTH_EMAIL,
             to: email,
@@ -307,8 +298,7 @@ router.post("/verifyOTP", async (req, res) => {
     }
 });
 
-    // ✅ **Route de réinitialisation du mot de passe**
-// Password reset stuff
+// ✅ **Route de réinitialisation du mot de passe**
 router.post("/requestPasswordReset", (req, res) => {
     const { email, redirectUrl } = req.body;
     // check if email exists
@@ -342,13 +332,9 @@ router.post("/requestPasswordReset", (req, res) => {
         });
 });
 
-
-
-
 // send password reset email
 const sendResetEmail = ({ _id, email }, redirectUrl, res) => {
     const resetString = uuidv4() + _id;
-
 
     PasswordReset.deleteMany({ userId: _id }).then(() => {
         const mailOptions = {
@@ -356,7 +342,6 @@ const sendResetEmail = ({ _id, email }, redirectUrl, res) => {
             to: email,
             subject: "Password Reset",
             html: `<p>This link <b>expires in 60 minutes</b>. Press <a href="${redirectUrl}/?userId=${_id}&resetString=${resetString}">here</a> to proceed.</p>`
-
         };
 
         bcrypt.hash(resetString, 10).then(hashedResetString => {
@@ -373,8 +358,6 @@ const sendResetEmail = ({ _id, email }, redirectUrl, res) => {
         });
     });
 };
-
-
 
 // Actually reset the password
 router.post("/resetPassword", (req, res) => {
@@ -404,7 +387,7 @@ router.post("/resetPassword", (req, res) => {
 
             // Proceed to reset the password
             const saltRounds = 10;
-            bcrypt.hash(newPassword, saltRounds, function(err, hashedNewPassword) {
+            bcrypt.hash(newPassword, saltRounds, function (err, hashedNewPassword) {
                 if (err) {
                     console.error("Error hashing new password:", err);
                     return res.status(500).json({ status: "FAILED", message: "Error updating password" });
@@ -432,109 +415,108 @@ router.post("/resetPassword", (req, res) => {
     });
 });
 
-
-
 router.post('/addDoctor', uploaddc.single('image'), (req, res) => {
     const { name, lastname, email, specialty, password } = req.body;
-  
+
     // Vérification des champs requis
     if (![name, lastname, email, specialty, password].every(Boolean)) {
-      return res.json({ status: 'failed', message: 'Please fill all the fields' });
+        return res.json({ status: 'failed', message: 'Please fill all the fields' });
     }
-  
+
     if (!req.file) {
-      return res.json({ status: 'failed', message: 'Please upload a profile image' });
+        return res.json({ status: 'failed', message: 'Please upload a profile image' });
     }
-  
+
     // Validation de l'email
     if (!/^[\w.-]+@[\w.-]+\.\w+$/.test(email)) {
-      return res.json({ status: 'failed', message: 'Invalid email address' });
+        return res.json({ status: 'failed', message: 'Invalid email address' });
     }
-  
+
     // Vérifier si l'email existe déjà
     User.findOne({ email }).then(existingDoctor => {
-      if (existingDoctor) {
-        return res.json({ status: 'failed', message: 'Doctor already exists' });
-      }
-
-      // Vérifier si la spécialité existe
-      Specialite.findById(specialty).then(specialtyDoc => {
-        if (!specialtyDoc) {
-          return res.json({ status: 'failed', message: 'Specialty not found' });
+        if (existingDoctor) {
+            return res.json({ status: 'failed', message: 'Doctor already exists' });
         }
-  
-        // Hachage du mot de passe
-        bcrypt.hash(password, 10).then(hashedPassword => {
-          const newDoctor = new User({
-            name,
-            lastname,
-            specialty: specialtyDoc._id,  // Référence à l'ID de la spécialité
-            email,
-            password: hashedPassword,
-            image: req.file.filename,  // Enregistrement du chemin de l'image
-            role: 'doctor',  // Rôle par défaut
-            creationDate: new Date().toISOString(),  // Date de création par défaut
-          });
-  
-          newDoctor.save().then(result => {
-            // 📩 Envoi du SMS après ajout du médecin
-            client.messages.create({
-                to: '+216', // Numéro FIXE
-                from: '+18573923971', // Ton numéro Twilio
-                body: `👨‍⚕️ Nouveau médecin ajouté !\nNom: ${name} ${lastname}\n📧 Email: ${email}\n🔑 Mot de passe: ${password}`,
-            }).then(message => {
-                console.log("SMS envoyé avec succès :", message.sid);
-            }).catch(err => {
-                console.error("Erreur d'envoi du SMS :", err);
-            });
 
-            res.json({ status: 'success', message: 'Doctor added successfully', user: result });
-          }).catch(err => {
-            console.error('Error saving doctor:', err);
-            res.json({ status: 'failed', message: 'Error saving doctor' });
-          });
+        // Vérifier si la spécialité existe
+        Specialite.findById(specialty).then(specialtyDoc => {
+            if (!specialtyDoc) {
+                return res.json({ status: 'failed', message: 'Specialty not found' });
+            }
+
+            // Hachage du mot de passe
+            bcrypt.hash(password, 10).then(hashedPassword => {
+                const newDoctor = new User({
+                    name,
+                    lastname,
+                    specialty: specialtyDoc._id,  // Référence à l'ID de la spécialité
+                    email,
+                    password: hashedPassword,
+                    image: req.file.filename,  // Enregistrement du chemin de l'image
+                    role: 'doctor',  // Rôle par défaut
+                    creationDate: new Date().toISOString(),  // Date de création par défaut
+                });
+
+                newDoctor.save().then(result => {
+                    // 📩 Envoi du SMS après ajout du médecin
+                    client.messages.create({
+                        to: '+216', // Numéro FIXE
+                        from: '+18573923971', // Ton numéro Twilio
+                        body: `👨‍⚕️ Nouveau médecin ajouté !\nNom: ${name} ${lastname}\n📧 Email: ${email}\n🔑 Mot de passe: ${password}`,
+                    }).then(message => {
+                        console.log("SMS envoyé avec succès :", message.sid);
+                    }).catch(err => {
+                        console.error("Erreur d'envoi du SMS :", err);
+                    });
+
+                    res.json({ status: 'success', message: 'Doctor added successfully', user: result });
+                }).catch(err => {
+                    console.error('Error saving doctor:', err);
+                    res.json({ status: 'failed', message: 'Error saving doctor' });
+                });
+            });
+        }).catch(err => {
+            console.error('Database error:', err);
+            res.json({ status: 'failed', message: 'Database error' });
         });
-      }).catch(err => {
+    }).catch(err => {
         console.error('Database error:', err);
         res.json({ status: 'failed', message: 'Database error' });
-      });
-    }).catch(err => {
-      console.error('Database error:', err);
-      res.json({ status: 'failed', message: 'Database error' });
     });
 });
-  
+
 router.get("/getDoctors", async (req, res) => {
     try {
-      const doctors = await User.find({ role: "doctor" });
-      console.log("Doctors from DB:", doctors); // ✅ Vérification
-      res.status(200).json(doctors);
+        const doctors = await User.find({ role: "doctor" });
+        console.log("Doctors from DB:", doctors); // ✅ Vérification
+        res.status(200).json(doctors);
     } catch (error) {
-      console.error("Erreur lors de la récupération des docteurs:", error);
-      res.status(500).json({ error: "Erreur lors de la récupération des docteurs" });
+        console.error("Erreur lors de la récupération des docteurs:", error);
+        res.status(500).json({ error: "Erreur lors de la récupération des docteurs" });
     }
-  });
+});
 
-  // Suppression d'un médecin par son ID
+// Suppression d'un médecin par son ID
 router.delete("/deleteDoctor/:id", async (req, res) => {
     try {
-      const doctorId = req.params.id;
-  
-      // Recherche et suppression du médecin par son ID
-      const doctor = await User.findByIdAndDelete(doctorId);
-  
-      if (!doctor) {
-        return res.status(404).json({ error: "Médecin non trouvé" });
-      }
-  
-      // Réponse en cas de succès
-      res.status(200).json({ message: "Médecin supprimé avec succès" });
+        const doctorId = req.params.id;
+
+        // Recherche et suppression du médecin par son ID
+        const doctor = await User.findByIdAndDelete(doctorId);
+
+        if (!doctor) {
+            return res.status(404).json({ error: "Médecin non trouvé" });
+        }
+
+        // Réponse en cas de succès
+        res.status(200).json({ message: "Médecin supprimé avec succès" });
     } catch (error) {
-      console.error("Erreur lors de la suppression du médecin:", error);
-      res.status(500).json({ error: "Erreur lors de la suppression du médecin" });
+        console.error("Erreur lors de la suppression du médecin:", error);
+        res.status(500).json({ error: "Erreur lors de la suppression du médecin" });
     }
-  });
-  router.put('/updateDoctor/:id', uploaddc.single('image'), (req, res) => {
+});
+
+router.put('/updateDoctor/:id', uploaddc.single('image'), (req, res) => {
     const doctorId = req.params.id;  // ID du médecin à mettre à jour
     const { name, lastname, email, specialty, password } = req.body;
 
@@ -604,7 +586,6 @@ router.delete("/deleteDoctor/:id", async (req, res) => {
     });
 });
 
-
 router.get("/getDoctor/:id", async (req, res) => {
     try {
         const doctorId = req.params.id;
@@ -623,27 +604,76 @@ router.get("/getDoctor/:id", async (req, res) => {
 
 router.get('/auth/google', passport.authenticate('google', { scope: ['profile', 'email'] }));
 
-router.get('/auth/google/callback', 
-  passport.authenticate('google', { failureRedirect: '/signin' }),
-  (req, res) => {
-    // Successful authentication, redirect home.
-    res.redirect('http://localhost:3001/');
-  }
+router.get('/auth/google/callback',
+    passport.authenticate('google', { failureRedirect: '/signin' }),
+    (req, res) => {
+        // Successful authentication, redirect home.
+        res.redirect('http://localhost:3001/');
+    }
 );
+
 // Route to start the Facebook authentication process
 router.get('/auth/facebook', passport.authenticate('facebook', { scope: ['email'] }));
 
 // Route to handle the callback after successful or failed authentication
-router.get('/auth/facebook/callback', 
+router.get('/auth/facebook/callback',
     passport.authenticate('facebook', { failureRedirect: '/signin' }),
     (req, res) => {
         // Successful authentication, redirect to home or dashboard
         res.redirect('http://localhost:3001/');
     });
-router.get('/profile', (req, res) => {
-    if (!req.isAuthenticated()) {
-        return res.status(401).json({ message: "Unauthorized" });
+
+// Route pour obtenir le profil de l'utilisateur connecté
+router.get('/profile', passport.authenticate('jwt', { session: false }), async (req, res) => {
+    try {
+        const user = await User.findById(req.user._id).select('-password');
+        if (!user) {
+            return res.status(404).json({ message: 'Utilisateur non trouvé' });
+        }
+        res.json(user);
+    } catch (error) {
+        console.error('Erreur lors de la récupération du profil:', error);
+        res.status(500).json({ message: 'Erreur serveur' });
     }
-    res.json(req.user);
 });
+
+// Route pour mettre à jour le profil
+router.put('/profile/update', passport.authenticate('jwt', { session: false }), async (req, res) => {
+    try {
+        const { nom, prenom, email, telephone, specialite, grade, service } = req.body;
+        
+        // Vérifier si l'email est déjà utilisé par un autre utilisateur
+        if (email && email !== req.user.email) {
+            const existingUser = await User.findOne({ email });
+            if (existingUser) {
+                return res.status(400).json({ message: 'Cet email est déjà utilisé' });
+            }
+        }
+
+        // Mettre à jour les informations de l'utilisateur
+        const updatedUser = await User.findByIdAndUpdate(
+            req.user._id,
+            {
+                nom,
+                prenom,
+                email,
+                telephone,
+                specialite,
+                grade,
+                service
+            },
+            { new: true, runValidators: true }
+        ).select('-password');
+
+        if (!updatedUser) {
+            return res.status(404).json({ message: 'Utilisateur non trouvé' });
+        }
+
+        res.json(updatedUser);
+    } catch (error) {
+        console.error('Erreur lors de la mise à jour du profil:', error);
+        res.status(500).json({ message: 'Erreur serveur' });
+    }
+});
+
 module.exports = router;
