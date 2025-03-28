@@ -30,7 +30,17 @@ pipeline {
             }
         }
         */
-
+        stage('SonarQube Analysis') { 
+steps{ 
+script {   
+def scannerHome = tool 'scanner' 
+withSonarQubeEnv { 
+sh "${scannerHome}/bin/sonar-scanner" 
+} 
+}  
+}   
+} 
+        
         stage('Build Application') {
             steps {
                 // Ajoutez ici la commande pour la construction de l'application
