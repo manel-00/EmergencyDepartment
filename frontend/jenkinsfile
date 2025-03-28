@@ -2,7 +2,7 @@ pipeline {
     agent any
 environment { 
 registryCredentials = "nexus" 
-registry = "192.168.33.10:8083" 
+registry = "172.22.191.237:8083" 
 } 
     stages {
         stage('Checkout SCM') {
