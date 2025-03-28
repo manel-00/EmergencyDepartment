@@ -4,7 +4,8 @@
   "main": "index.js",
   "scripts": {
     "test": "mocha",
-    "start": "node server.js"
+    "start": "node server.js",
+    "build-dev": "echo 'Run your build tasks here'"
   },
   "author": "",
   "license": "ISC",
