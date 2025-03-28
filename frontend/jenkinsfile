@@ -19,30 +19,22 @@ pipeline {
             }
         }
 
-        // Suppression de l'étape "Unit Test" ou ajout d'une étape vide si nécessaire
-        /*
-        stage('Unit Test') {
-            steps {
-                dir('frontend') {
-                    echo 'Running unit tests...'
-                    sh 'npm test'
-                }
-            }
-        }
-        */
         stage('SonarQube Analysis') { 
-steps{ 
-script {   
-def scannerHome = tool 'scanner' 
-withSonarQubeEnv { 
-dir('frontend'){
-sh "${scannerHome}/bin/sonar-scanner"
-}
-} 
-}  
-}   
-} 
-        
+            steps { 
+                script {   
+                    def scannerHome = tool 'scanner' 
+                    withSonarQubeEnv('SonarQube') {  // Remplace "SonarQube" si tu utilises un autre nom
+                        dir('frontend') {  // Assurez-vous que vous êtes dans le bon dossier
+                            sh 'pwd'  // Affiche le chemin actuel
+                            sh 'ls -l'  // Liste les fichiers dans le dossier, pour vérifier sonar-project.properties
+                            sh 'cat sonar-project.properties'  // Affiche le contenu du fichier
+                            sh "${scannerHome}/bin/sonar-scanner"  // Lance SonarScanner
+                        }
+                    }
+                }  
+            }  
+        }
+
         stage('Build Application') {
             steps {
                 // Ajoutez ici la commande pour la construction de l'application
