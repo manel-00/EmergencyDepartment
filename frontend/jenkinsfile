@@ -45,10 +45,10 @@ sh "${scannerHome}/bin/sonar-scanner"
 stage('Building images (node and mongo)') { 
 steps{ 
 script { 
-dir('backend')
+dir('backend'){
 sh('docker-compose build') 
 }
-} 
+}
 } 
 } 
         
