@@ -35,7 +35,9 @@ steps{
 script {   
 def scannerHome = tool 'scanner' 
 withSonarQubeEnv { 
-sh "${scannerHome}/bin/sonar-scanner" 
+dir('frontend'){
+sh "${scannerHome}/bin/sonar-scanner"
+}
 } 
 }  
 }   
