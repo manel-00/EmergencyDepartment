@@ -19,20 +19,30 @@ pipeline {
             }
         }
 
-        stage('SonarQube Analysis') { 
-            steps { 
-                script {   
-                    def scannerHome = tool 'scanner' 
-                    withSonarQubeEnv('SonarQube') {  // Remplace "SonarQube" si tu utilises un autre nom
-                        dir('frontend') {  // Assurez-vous que vous êtes dans le bon dossier
-                            
-                            sh "${scannerHome}/bin/sonar-scanner"  // Lance SonarScanner
-                        }
-                    }
-                }  
-            }  
+        // Suppression de l'étape "Unit Test" ou ajout d'une étape vide si nécessaire
+        /*
+        stage('Unit Test') {
+            steps {
+                dir('frontend') {
+                    echo 'Running unit tests...'
+                    sh 'npm test'
+                }
+            }
         }
-
+        */
+        stage('SonarQube Analysis') { 
+steps{ 
+script {   
+def scannerHome = tool 'scanner' 
+withSonarQubeEnv { 
+dir('frontend'){
+sh "${scannerHome}/bin/sonar-scanner"
+}
+} 
+}  
+}   
+} 
+        
         stage('Build Application') {
             steps {
                 // Ajoutez ici la commande pour la construction de l'application
