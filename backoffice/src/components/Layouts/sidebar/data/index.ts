@@ -12,6 +12,7 @@ export const NAV_DATA = [
         icon: Icons.User,
         items: [],
       },
+      
       {
         title: "Rooms",
         url: "/rooms",
@@ -26,6 +27,12 @@ export const NAV_DATA = [
         items: [],
       },
       
+      {
+        title: "New room",
+        url: "/newroom",
+        icon: Icons.User,
+        items: [],
+      },
       
 
      

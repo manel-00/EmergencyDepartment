@@ -2,10 +2,38 @@
 
 import React from "react";
 
+
 const RoomTable = () => {
+  const DashboardPanel = () => {
+    const data = [
+      { label: "Occupied Rooms", value: 7, color: "bg-[#00A09D]" }, // Critical
+      { label: "Available Rooms", value: 3, color: "bg-[#00A09D]" }, // Safe
+      { label: "Patients Admitted Today", value: 5, color: "bg-[#00A09D]" }, // Medical
+      { label: "Pending Cleaning Requests", value: 1, color: "bg-[#00A09D]" }, // Attention
+    ];
+  
+    return (
+      <div className="grid grid-cols-4 gap-6 p-6 bg-gray-100 rounded-lg shadow-lg mx-auto mb-6">
+        {data.map((item, index) => (
+          <div
+            key={index}
+            className={`p-4 text-white text-center border-none ${item.color} flex flex-col items-center justify-center`}
+            style={{ height: "120px", width: "100%" }} // Reduced height
+          >
+            <p className="text-lg font-semibold mb-1">{item.label}</p>
+            <p className="text-2xl font-bold">{item.value}</p>
+          </div>
+        ))}
+      </div>
+    );
+  };
+  
   return (
     <div>
       <h2 className="text-2xl font-semibold mb-6">Rooms & Bed Information</h2>
+
+      {/* Dashboard Panel */}
+<DashboardPanel />
       
       {/* Ward and Floor Selectors */}
       <div className="flex space-x-4 mb-6">

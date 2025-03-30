@@ -16,7 +16,7 @@ const MongoStore = require("connect-mongo");
 
 // ✅ Enable CORS (Make sure credentials are allowed)
 app.use(cors({
-  origin: ["http://localhost:3001", "http://localhost:3002"], // Autorise les 2 frontends
+  origin: ["http://localhost:5173","http://localhost:3001", "http://localhost:3002"], // ✅ Allow both
   credentials: true, // Important pour cookies + sessions
 }));
 

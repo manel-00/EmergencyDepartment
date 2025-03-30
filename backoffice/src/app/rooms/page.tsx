@@ -2,83 +2,21 @@
 
 import React, { useState, useEffect } from "react";
 import axios from "axios";
-import { Plus, Pencil, Trash2 } from "lucide-react";
+import { Plus, Pencil, Trash2,Waypoints } from "lucide-react";
+import { SearchIcon } from "@/assets/icons";
 import { Room, RoomFormData } from "./types";
+import Link from "next/link";
+import Breadcrumb from "@/components/Breadcrumbs/Breadcrumb";
+
+
 
 const API_URL = "http://localhost:3000/room"; // Adjust this to match your backend URL
 
-const DashboardPanel = () => {
-  const data = [
-    { label: "Occupied Rooms", value: 7, color: "bg-red-600" }, // Critical
-    { label: "Available Rooms", value: 3, color: "bg-green-600" }, // Safe
-    { label: "Patients Admitted Today", value: 5, color: "bg-blue-600" }, // Medical
-    { label: "Pending Cleaning Requests", value: 1, color: "bg-orange-500" }, // Attention
-  ];
-
-  return (
-    <div className="grid grid-cols-4 gap-4 p-6 bg-gray-100 rounded-lg shadow-lg mx-auto mb-6">
-      {data.map((item, index) => (
-        <div
-          key={index}
-          className={`p-6 text-white text-center rounded-lg shadow-md ${item.color}`}
-        >
-          <p className="text-lg font-semibold">{item.label}</p>
-          <p className="text-2xl font-bold">{item.value}</p>
-        </div>
-      ))}
-    </div>
-  );
-};
 
 
-const StaticTable = () => {
-  return (
-    <div className="bg-white rounded-lg shadow-md overflow-hidden mb-6">
-      <h3 className="text-xl font-semibold mb-4">Static Room Table</h3>
-      <table className="min-w-full table-auto">
-        <thead>
-          <tr>
-            <th className="px-4 py-2 text-left">Room Number</th>
-            <th className="px-4 py-2 text-left">Type</th>
-            <th className="px-4 py-2 text-left">Floor</th>
-            <th className="px-4 py-2 text-left">Ward</th>
-            <th className="px-4 py-2 text-left">State</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td className="border px-4 py-2">101</td>
-            <td className="border px-4 py-2">Single</td>
-            <td className="border px-4 py-2">1</td>
-            <td className="border px-4 py-2">Psych Ward</td>
-            <td className="border px-4 py-2">Occupied</td>
-          </tr>
-          <tr>
-            <td className="border px-4 py-2">102</td>
-            <td className="border px-4 py-2">Double</td>
-            <td className="border px-4 py-2">2</td>
-            <td className="border px-4 py-2">Surgical Ward</td>
-            <td className="border px-4 py-2">Available</td>
-          </tr>
-          <tr>
-            <td className="border px-4 py-2">103</td>
-            <td className="border px-4 py-2">Single</td>
-            <td className="border px-4 py-2">3</td>
-            <td className="border px-4 py-2">Emergency Ward</td>
-            <td className="border px-4 py-2">Occupied</td>
-          </tr>
-          <tr>
-            <td className="border px-4 py-2">104</td>
-            <td className="border px-4 py-2">Double</td>
-            <td className="border px-4 py-2">4</td>
-            <td className="border px-4 py-2">Psych Ward</td>
-            <td className="border px-4 py-2">Cleaning</td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
-  );
-};
+
+
+
 
 
 function App() {
@@ -180,19 +118,77 @@ function App() {
 
   
   return (
-    <div className="min-h-screen bg-gray-800 p-8">
+    <div >
+   <Breadcrumb pageName="Hospital Rooms List" />
 
 
+ {/* Stats Cards and Search */}
+<div className="grid grid-cols-7 gap-2 mb-6">
+  <div className="bg-[#00A09D] text-white p-4">
+    <div className="text-3xl font-bold">16</div>
+    <div className="text-sm">Total Rooms</div>
+  </div>
+  <div className="bg-[#00A09D] text-white p-4">
+    <div className="text-3xl font-bold">20</div>
+    <div className="text-sm">Total Beds</div>
+  </div>
+  <div className="bg-[#00A09D] text-white p-4">
+    <div className="text-3xl font-bold">18</div>
+    <div className="text-sm">Free Beds</div>
+  </div>
 
-{/* Rooms List Div */}
-<div className="overflow-x-auto bg-gray-800 text-white p-2">
-  <div className="text-left text-s font-medium">
-    Rooms List
+  {/* Search Form */}
+  <div className="col-span-4 rounded p-4 shadow">
+    <div className="space-y-3">
+      <div className="relative">
+        <input
+          type="text"
+          placeholder="  Search by vendor name..."
+          className=" bg-transparent w-full pl-10 pr-4 py-2 border border-gray-300  rounded focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+        />
+        <SearchIcon className="pointer-events-none absolute left-5 top-1/2 -translate-y-1/2 max-[1015px]:size-5" />
+        
+      </div>
+
+      <div className="flex gap-3">
+        {/* Floor Filter */}
+        <select
+          name="floor"
+          value={query.floor}
+          onChange={handleSearchChange}
+          className="flex-1 px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+        >
+          <option value="">Filter by floor</option>
+          {floors.map((floor) => (
+            <option key={floor} value={floor}>
+              Floor N {floor}
+            </option>
+          ))}
+        </select>
+
+        {/* Ward Filter */}
+        <select
+          name="ward"
+          value={query.ward}
+          onChange={handleSearchChange}
+          className="flex-1 px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+        >
+          <option value="">Filter by ward</option>
+          {wards.map((ward) => (
+            <option key={ward} value={ward}>
+              {ward}
+            </option>
+          ))}
+        </select>
+      </div>
+    </div>
   </div>
 </div>
-<div className="min-h-screen bg-gray-100 p-8">
-
-
+<Link href="/rooms/addroom">
+<button className="bg-[#008B8B] text-white font-bold uppercase px-4 py-2  shadow hover:bg-[#006A6A]">
+Add Room
+      </button>
+</Link>
 
 {/* Search Form */}
 <div className="mb-6">
@@ -232,7 +228,7 @@ function App() {
         </div>
 
        {/* Table for All Rooms */}
-<div className="overflow-x-auto bg-white rounded-lg shadow-md mb-6">
+<div className="overflow-x-auto  rounded-lg shadow-md mb-6">
   <h3 className="text-xl font-semibold mb-4">All Rooms</h3>
   {rooms.length === 0 ? (
     <p>No rooms available in the database.</p>
@@ -240,21 +236,39 @@ function App() {
     <table className="min-w-full table-auto border-collapse text-left">
       <thead className="bg-gray-800 text-white">
         <tr>
-          <th className="px-3 py-3 text-xs font-large">Room Number</th>
-          <th className="px-6 py-3 text-xs font-medium">Type</th>
+          <th className="px-6 py-4 text-m font-large">Room Number</th>
+          <th className="px-3 py-3 text-xs font-large">ID</th>
+
+          <th className="px-6 py-3 text-xs font-medium">Capacity</th>
           <th className="px-6 py-3 text-xs font-medium">Floor</th>
           <th className="px-6 py-3 text-xs font-medium">Ward</th>
           <th className="px-6 py-3 text-xs font-medium">State</th>
           <th className="px-6 py-3 text-xs font-medium">Actions</th>
           <th className="px-6 py-3 text-xs font-medium">Actions</th>
+          <th className="px-6 py-3 text-xs font-medium">
+          <Waypoints className="h-5 w-5" />
+
+          </th>
+
 
         </tr>
       </thead>
       <tbody>
         {rooms.map((room) => (
-          <tr key={room._id} className="border-b">
-            <td className="px-3 py-4 text-sm">{room.number}</td>
-            <td className="px-6 py-4 text-sm">{room.type}</td>
+          <tr 
+          key={room._id}
+          className={`
+    even:bg-gray-300 odd:bg-white text-gray-900
+    dark:even:bg-gray-800 dark:odd:bg-transparent dark:text-white
+
+
+          `}
+        >
+        
+            <td className="px-3 py-4 text-sm"> Room {room.number} (0)</td>
+            <td className="px-6 py-4 text-sm">{room._id}</td>
+
+            <td className="px-6 py-4 text-sm">{room.type} </td>
             <td className="px-6 py-4 text-sm">{room.floor}</td>
             <td className="px-6 py-4 text-sm">{room.ward}</td>
             <td className="px-6 py-4 text-sm">{room.state}</td>
@@ -270,9 +284,22 @@ function App() {
                 className="text-red-500 hover:text-red-700"
               >
                 <Trash2 className="h-4 w-4" />
+
               </button>
             </td>
             <td className="px-6 py-4 text-sm">assign patient</td>
+            <td className="px-6 py-4 text-sm">
+            <Link href={`/rooms/${room._id}`}>
+              view details
+            </Link>
+
+
+            </td>
+
+
+        
+
+            
 
           </tr>
         ))}
@@ -289,8 +316,9 @@ function App() {
       <div className="max-w-4xl mx-auto">
         <h1 className="text-3xl font-bold text-gray-800 mb-8">Room Management</h1>
 
-        {/* Dashboard Panel */}
-        <DashboardPanel />
+        
+
+      
 
         
 
@@ -353,7 +381,6 @@ function App() {
 
       </div>
 
-    </div>
   );
 }
 

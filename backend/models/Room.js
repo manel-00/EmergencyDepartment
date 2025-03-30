@@ -5,7 +5,7 @@ const roomSchema = new mongoose.Schema({
     type: { type: String, required: true },
     floor: { type: Number, required: true },
     ward: { type: String, required: true },
-    state: { type: Number, required: true }
+    state: { type: String, default: 'available', }
 }, { timestamps: true });
 
 const Room = mongoose.model('Room', roomSchema);

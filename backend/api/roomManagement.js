@@ -1,7 +1,88 @@
 const express = require('express');
-const Room = require('../models/Room'); // Adjust the path if necessary
-
+const Room = require('../models/Room'); 
+const Bed = require("../models/Bed");
 const router = express.Router();
+
+// Fetch all beds in a specific room by roomId
+router.get('/:roomId/beds', async (req, res) => {
+    try {
+      const { roomId } = req.params; // Get roomId from the URL
+  
+      // Check if the room exists
+      const room = await Room.findById(roomId);
+      if (!room) {
+        return res.status(404).json({ error: "Room not found" });
+      }
+  
+      // Fetch all beds associated with the given roomId
+      const beds = await Bed.find({ room: roomId });
+  
+      // If no beds are found, return a message
+      if (beds.length === 0) {
+        return res.status(404).json({ message: "No beds found in this room" });
+      }
+  
+      // Respond with the list of beds
+      res.status(200).json(beds);
+    } catch (error) {
+      res.status(400).json({ error: error.message });
+    }
+  });
+
+// Create a new bed in an existing room
+router.post('/:roomId/create-bed', async (req, res) => {
+    try {
+      const { roomId } = req.params; // Get roomId from URL
+      const { number, state, patient } = req.body; // Get bed details from request body
+  
+      // Check if the room exists
+      const room = await Room.findById(roomId);
+      if (!room) {
+        return res.status(404).json({ error: "Room not found" });
+      }
+  
+      // Create a new bed and associate it with the room
+      const newBed = new Bed({
+        number,
+        state,
+        room: roomId, // Automatically associate the bed with the room
+        patient: patient || null, // If patient is provided, set it, otherwise set to null
+      });
+  
+      // Save the new bed to the database
+      const savedBed = await newBed.save();
+  
+      // Respond with the created bed
+      res.status(201).json(savedBed);
+    } catch (error) {
+      res.status(400).json({ error: error.message });
+    }
+  });
+
+// Create a new bed
+router.post("/addbed", async (req, res) => {
+  try {
+    const newBed = new Bed(req.body);
+    const savedBed = await newBed.save();
+    res.status(201).json(savedBed);
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
+});
+
+// Get all beds with room and patient details
+router.get("/getallbeds", async (req, res) => {
+  try {
+    const beds = await Bed.find().populate("room").populate({
+      path: "patient",
+      match: { role: "patient" } // Ensures only users with role 'patient' are populated
+    });
+    res.status(200).json(beds);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
 
 
 // Get all rooms (with optional filters)

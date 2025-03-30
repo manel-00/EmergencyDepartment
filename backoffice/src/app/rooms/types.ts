@@ -4,7 +4,7 @@ export interface Room {
   type: string;
   floor: number;
   ward: string;
-  state: number;
+  state: string;
 }
 
 // types.ts
@@ -12,5 +12,7 @@ export interface RoomFormData {
   number: string;
   type: string;
   floor: number;
-  state: number;
+  state: string;
+  ward: string;
+
 }
