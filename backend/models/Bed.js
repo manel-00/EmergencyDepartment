@@ -3,8 +3,9 @@ const mongoose = require("mongoose");
 const bedSchema = new mongoose.Schema({
   number: { type: String, required: true, unique: true },
   state: { type: String, required: true, enum: ["available", "occupied", "maintenance"], default: "available" },
-  room: { type: mongoose.Schema.Types.ObjectId, ref: "Room", required: true }, // Assuming a Room model
-  patient: { type: mongoose.Schema.Types.ObjectId, ref: "User", default: null }, // Assuming User model with role 'patient'
+  free: { type: Boolean, default: true } ,
+  room: { type: mongoose.Schema.Types.ObjectId, ref: "Room", required: true }, 
+  patient: { type: mongoose.Schema.Types.ObjectId, ref: "User", default: null }, 
 }, { timestamps: true });
 
 const Bed = mongoose.model("Bed", bedSchema);

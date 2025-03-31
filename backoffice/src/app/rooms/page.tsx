@@ -238,6 +238,8 @@ Add Room
         <tr>
           <th className="px-6 py-4 text-m font-large">Room Number</th>
           <th className="px-3 py-3 text-xs font-large">ID</th>
+          <th className="px-3 py-3 text-xs font-large">free beds</th>
+
 
           <th className="px-6 py-3 text-xs font-medium">Capacity</th>
           <th className="px-6 py-3 text-xs font-medium">Floor</th>
@@ -267,6 +269,8 @@ Add Room
         
             <td className="px-3 py-4 text-sm"> Room {room.number} (0)</td>
             <td className="px-6 py-4 text-sm">{room._id}</td>
+            <td className="px-6 py-4 text-sm">free beds</td>
+
 
             <td className="px-6 py-4 text-sm">{room.type} </td>
             <td className="px-6 py-4 text-sm">{room.floor}</td>

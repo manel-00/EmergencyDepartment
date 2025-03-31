@@ -1,7 +1,46 @@
 const express = require('express');
 const Room = require('../models/Room'); 
 const Bed = require("../models/Bed");
+const User = require('../models/User'); 
+
 const router = express.Router();
+
+// Assign a patient to a bed
+router.put('/:bedId/assign-patient', async (req, res) => {
+  try {
+      const { bedId } = req.params;
+      const { patientId } = req.body;
+
+      // Check if the bed exists
+      const bed = await Bed.findById(bedId);
+      if (!bed) {
+          return res.status(404).json({ error: "Bed not found" });
+      }
+
+      // Check if the user exists and has the role 'patient'
+      const patient = await User.findById(patientId);
+      if (!patient || patient.role !== 'patient') {
+          return res.status(400).json({ error: "The user is not a patient" });
+      }
+
+      // Update the bed with the patient ID and change state to "occupied"
+      bed.patient = patientId;
+      bed.state = "occupied";
+      bed.free = false;
+
+      // Save the updated bed
+      const updatedBed = await bed.save();
+
+      res.status(200).json({
+          message: "Patient assigned to bed successfully",
+          bed: updatedBed
+      });
+  } catch (error) {
+      res.status(400).json({ error: error.message });
+  }
+});
+
+
 
 // Fetch all beds in a specific room by roomId
 router.get('/:roomId/beds', async (req, res) => {
@@ -138,7 +177,7 @@ router.post('/', async (req, res) => {
 
 router.get('/', async (req, res) => {
     try {
-        const rooms = await Room.find();
+        const rooms = await Room.find().sort({ _id: -1 }); ;
         res.json(rooms);
     } catch (error) {
         res.status(500).json({ message: error.message });
