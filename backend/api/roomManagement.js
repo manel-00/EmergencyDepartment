@@ -5,6 +5,26 @@ const User = require('../models/User');
 
 const router = express.Router();
 
+
+
+
+// DELETE Bed by ID
+router.delete('/beds/:id', async (req, res) => {
+  try {
+      const { id } = req.params;
+      const deletedBed = await Bed.findByIdAndDelete(id);
+      
+      if (!deletedBed) {
+          return res.status(404).json({ message: "Bed not found" });
+      }
+
+      res.json({ message: "Bed deleted successfully", bed: deletedBed });
+  } catch (error) {
+      res.status(500).json({ message: "Error deleting bed", error: error.message });
+  }
+});
+
+
 // Assign a patient to a bed
 router.put('/:bedId/assign-patient', async (req, res) => {
   try {
@@ -45,7 +65,7 @@ router.put('/:bedId/assign-patient', async (req, res) => {
 // Fetch all beds in a specific room by roomId
 router.get('/:roomId/beds', async (req, res) => {
     try {
-      const { roomId } = req.params; // Get roomId from the URL
+      const { roomId } = req.params; 
   
       // Check if the room exists
       const room = await Room.findById(roomId);
