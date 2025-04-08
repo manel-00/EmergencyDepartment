@@ -292,7 +292,7 @@ Add Room
 
               </button>
             </td>
-            <td className="px-6 py-4 text-sm">
+            <td className="px-6 py-4 font-medium text-primary ">
             <Link href={`/rooms/${room._id}`}>
               view details
             </Link>

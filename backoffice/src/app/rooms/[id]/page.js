@@ -67,6 +67,8 @@ export default function RoomDetails() {
         setShowPopup(false);
         setNumber('');
         setState('available');
+        // Re-fetch room availability (if the room's overall state depends on the number of beds)
+        handleRefreshAvailability(); // Call the function here
       } else {
         console.error('Failed to add new bed:', await res.text());
       }
@@ -104,6 +106,8 @@ export default function RoomDetails() {
         // Close the popup and reset the selected patient
         setShowPopup(false);
         setSelectedPatient("");
+        // Re-fetch room availability (if the room's overall state depends on the number of beds)
+        handleRefreshAvailability(); // Call the function here
       } else {
         console.error("Failed to assign patient:", responseData);
       }
@@ -129,6 +133,8 @@ export default function RoomDetails() {
   
       if (res.ok) {
         setBeds(beds.filter((bed) => bed._id !== bedId));
+        // Re-fetch room availability (if the room's overall state depends on the number of beds)
+        handleRefreshAvailability(); // Call the function here
       } else {
         console.error("Failed to delete bed:", await res.text());
       }

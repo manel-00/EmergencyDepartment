@@ -40,6 +40,43 @@ router.get('/count', async (req, res) => {
 });
 
 
+// Function to automatically update room availability
+async function updateRoomAvailability(roomId) {
+  try {
+    const room = await Room.findById(roomId);
+    if (!room) {
+      console.log(`Room with ID ${roomId} not found.`);
+      return;
+    }
+
+    // Count the number of available beds in the room
+    const availableBedsCount = await Bed.countDocuments({ room: roomId, state: 'available' });
+
+    // If no beds are available, update the room state to 'unavailable'
+    if (availableBedsCount === 0) {
+      room.state = 'Occupied';
+      await room.save();
+      console.log(`Room ${room.number} (ID: ${roomId}) is now unavailable.`);
+    } else {
+      // If at least one bed is available, update the room state to 'available'
+      room.state = 'Available';
+      await room.save();
+      console.log(`Room ${room.number} (ID: ${roomId}) is now available.`);
+    }
+  } catch (error) {
+    console.error('Error updating room availability:', error);
+  }
+}
+router.post('/:roomId/update-availability', async (req, res) => {
+  const { roomId } = req.params;
+
+  try {
+      await updateRoomAvailability(roomId);
+      res.status(200).json({ message: `Availability of room with ID ${roomId} updated successfully.` });
+  } catch (error) {
+      res.status(500).json({ error: 'Failed to update room availability.' });
+  }
+});
 
 
 
