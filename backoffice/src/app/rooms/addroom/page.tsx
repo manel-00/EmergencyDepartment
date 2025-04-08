@@ -176,7 +176,7 @@ function AddRoom() {
           required
         >
           <option value="">Select Ward</option>
-          {["psych", "surgical", "bones"].map((wardoption) => (
+          {["Infectious Diseases Ward","Psych Ward", "Surgical Ward", "Cardiology Ward", "Neurology Ward"].map((wardoption) => (
             <option key={wardoption} value={wardoption}>{wardoption}</option>
           ))}
         </select>

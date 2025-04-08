@@ -88,7 +88,6 @@ const BedManagement = () => {
                 <p className="text-sm text-gray-500">Room ID: {bed.room ? bed.room._id : "No Room"}</p>
               </div>
               <div className="text-right">
-                <p className="text-lg font-medium text-gray-900">$cost</p>
               </div>
             </div>
             <div className="flex justify-between items-center">

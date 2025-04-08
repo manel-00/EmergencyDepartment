@@ -1,9 +1,9 @@
 "use client";
 import { useState, useEffect } from "react";
 import { useParams } from 'next/navigation';
-import { Pencil,Trash2,CheckCircle, AlertCircle  } from "lucide-react";
+import { Pencil,Trash2,CheckCircle, AlertCircle, RefreshCcwDot  } from "lucide-react";
 import { Printer, RotateCcw, ArrowRight, Armchair, Shirt } from 'lucide-react';
-
+import axios from 'axios';
 
 
 export default function RoomDetails() {
@@ -136,7 +136,26 @@ export default function RoomDetails() {
       console.error("Error deleting bed:", error);
     }
   };
-  
+
+
+  const handleRefreshAvailability = async () => {
+    try {
+      const response = await axios.post(`http://localhost:3000/room/${id}/update-availability`);
+      console.log(response.data.message);
+
+      // Re-fetch the room details to get the updated state
+      const roomRes = await fetch(`http://localhost:3000/room/${id}`);
+      if (roomRes.ok) {
+        const roomData = await roomRes.json();
+        setRoom(roomData); // Update the room state, which should trigger a re-render
+      } else {
+        console.error('Failed to re-fetch room details after availability update.');
+      }
+    } catch (error) {
+      console.error('Failed to update room availability:', error.response?.data?.error || error.message);
+      // Optionally, display an error message to the user.
+    }
+  };
 
   return (
     <div >
@@ -157,7 +176,7 @@ export default function RoomDetails() {
     </div>
 
     <div className="grid grid-cols-[120px,1fr] items-center">
-      <label className="text-gray-800 dark:text-gray-100 font-semibold">Total Beds</label>
+      <label className="text-gray-800 dark:text-gray-100 font-semibold"> Capacity</label>
       <span>{roomCapacity} Bed(s)</span>
     </div>
 
@@ -180,8 +199,8 @@ export default function RoomDetails() {
     </div>
 
     <div className="grid grid-cols-[120px,1fr] items-center">
-      <label className="text-gray-800 dark:text-gray-100 font-semibold">Temp.</label>
-      <span>102.00</span>
+      <label className="text-gray-800 dark:text-gray-100 font-semibold">Ward.</label>
+      <span>{room.ward}</span>
     </div>
 
     {/* Add Bed Button */}
@@ -198,6 +217,19 @@ export default function RoomDetails() {
       </button>
       {isRoomFull && <p className="text-red-500 text-sm mt-2">Cannot add more beds. Room at full capacity.</p>}
     </div>
+
+
+
+
+    <button onClick={handleRefreshAvailability}>
+    <RefreshCcwDot size={40} className="text-green-600 hover:text-blue-300" />
+
+  refresh
+</button>
+
+
+
+    
 
     {/* Popup for Add Bed / Assign Patient */}
     {showPopup && (
@@ -290,7 +322,6 @@ export default function RoomDetails() {
 
             {/* Bed details on the right side */}
             <div className="flex flex-col ml-4">
-              <h3 className="text-lg font-bold">{bed.patient}</h3>
               <p className="text-lg font-bold">Bed {bed.number}</p>
 
               {/* Assign patient button */}
@@ -335,68 +366,10 @@ export default function RoomDetails() {
 
 
 
-      <h1 className="text-2xl font-bold text-gray-800">Room {room.number}</h1>
-      <p className="mt-2"><strong>Type:</strong> {room.type}</p>
-      <p><strong>Floor:</strong> {room.floor}</p>
-      <p><strong>State:</strong> {room.state}</p>
-      <p><strong>Capacity:</strong> {roomCapacity} beds</p>
 
-      <h2 className="text-xl font-bold mt-6">Beds in this Room:</h2>
-      {beds.length > 0 ? (
-        <div className="mt-4 grid grid-cols-3 gap-4">
-          {beds.map((bed) => {
-            let bgColor = {
-              available: "bg-green-500",
-              occupied: "bg-red-500",
-              maintenance: "bg-yellow-500"
-            }[bed.state] || "bg-gray-500";
+     
 
-            return (
-              <div key={bed._id} className={`p-4 text-white rounded-lg shadow-lg ${bgColor}`}>
-                <Pencil size={18} className="text-white hover:text-gray-300 cursor-pointer" />
-                <button
-            className="p-1 bg-red-600 rounded-full hover:bg-red-400"
-            onClick={() => handleDeleteBed(bed._id)}
-          >
-            <Trash2 size={18} className="text-white hover:text-gray-300" />
-          </button>
-                <p className="text-lg font-bold">Bed {bed.number}</p>
-
-                {/* Show "Assign Patient" button only for available beds */}
-                {bed.state === "available" && (
-                  <button 
-                    onClick={() => {
-                      setSelectedBed(bed._id);
-                      setPopupType("assignPatient");
-                      setShowPopup(true);
-                    }} 
-                    className="mt-2 bg-blue-500 text-white px-3 py-1 rounded"
-                  >
-                    Assign Patient
-                  </button>
-                )}
-              </div>
-            );
-          })}
-        </div>
-      ) : (
-        <p className="mt-4 text-gray-500">No beds found in this room.</p>
-      )}
-
-      {/* Add Bed Button */}
-      <div className="mt-6 flex flex-col">
-        <button 
-          onClick={() => {
-            setPopupType("addBed");
-            setShowPopup(true);
-          }} 
-          className={`bg-blue-500 text-white p-2 rounded flex items-center ${isRoomFull ? "opacity-50 cursor-not-allowed" : ""}`}
-          disabled={isRoomFull}
-        >
-          + Add Bed
-        </button>
-        {isRoomFull && <p className="text-red-500 text-sm mt-2">Cannot add more beds. Room at full capacity.</p>}
-      </div>
+     
 
       {/* Popup for Add Bed / Assign Patient */}
       {showPopup && (

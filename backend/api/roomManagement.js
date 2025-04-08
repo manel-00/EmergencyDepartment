@@ -5,6 +5,39 @@ const User = require('../models/User');
 
 const router = express.Router();
 
+// GET /api/beds/count/total - Returns the total count of beds
+router.get('/countbeds', async (req, res) => {
+  try {
+    const totalBeds = await Bed.countDocuments({});
+    res.status(200).json({ totalBeds });
+  } catch (error) {
+    console.error('Error counting total beds:', error);
+    res.status(500).json({ error: 'Failed to count total beds.' });
+  }
+});
+
+// GET /api/beds/count/free - Returns the count of available (free) beds
+router.get('/countbeds/free', async (req, res) => {
+  try {
+    const freeBeds = await Bed.countDocuments({ state: 'available' });
+    res.status(200).json({ freeBeds });
+  } catch (error) {
+    console.error('Error counting free beds:', error);
+    res.status(500).json({ error: 'Failed to count free beds.' });
+  }
+});
+
+
+// GET /api/rooms/count - Returns the total count of rooms (Protected)
+router.get('/count', async (req, res) => {
+  try {
+    const totalRooms = await Room.countDocuments({});
+    res.status(200).json({ totalRooms: totalRooms });
+  } catch (error) {
+    console.error('Error counting total rooms:', error);
+    res.status(500).json({ error: 'Failed to count total rooms.' });
+  }
+});
 
 
 
