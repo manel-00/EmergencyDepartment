@@ -31,6 +31,14 @@ const Header = () => {
       console.log("🔄 Fetching user session...");
   
       const token = localStorage.getItem("token");
+
+
+      if (!token) {
+        console.warn(" No token found. Skipping session fetch.");
+        return;
+      }
+
+
       const response = await axios.get("http://localhost:3000/user/session", {
         headers: token ? { Authorization: `Bearer ${token}` } : {},
         withCredentials: true,
@@ -53,8 +61,16 @@ const Header = () => {
   
   useEffect(() => {
     const checkAccess = async () => {
+      const token = localStorage.getItem("token");
+       // ✅ Don't even make the request if there's no token
+    if (!token) {
+      console.warn("⛔ No token found. Skipping session check.");
+      return;
+    }
+
       try {
-        const token = localStorage.getItem("token");
+
+
         const response = await axios.get("http://localhost:3000/user/session", {
           headers: token ? { Authorization: `Bearer ${token}` } : {},
           withCredentials: true,
