@@ -8,6 +8,43 @@ const router = express.Router();
 
 
 
+
+
+
+
+
+
+// Get all beds with room and patient details
+router.get("/getallbeds", async (req, res) => {
+  try {
+    const beds = await Bed.find().populate("room").populate({
+      path: "patient",
+      match: { role: "patient" } // Ensures only users with role 'patient' are populated
+    });
+    res.status(200).json(beds);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+
+// UPDATE Bed by ID
+router.put("/beds/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+    const updatedBed = await Bed.findByIdAndUpdate(id, req.body, { new: true });
+
+    if (!updatedBed) {
+      return res.status(404).json({ message: "Bed not found" });
+    }
+
+    res.json({ message: "Bed updated successfully", bed: updatedBed });
+  } catch (error) {
+    res.status(500).json({ message: "Error updating bed", error: error.message });
+  }
+});
+
+
 // DELETE Bed by ID
 router.delete('/beds/:id', async (req, res) => {
   try {
@@ -129,18 +166,7 @@ router.post("/addbed", async (req, res) => {
   }
 });
 
-// Get all beds with room and patient details
-router.get("/getallbeds", async (req, res) => {
-  try {
-    const beds = await Bed.find().populate("room").populate({
-      path: "patient",
-      match: { role: "patient" } // Ensures only users with role 'patient' are populated
-    });
-    res.status(200).json(beds);
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-});
+
 
 
 

@@ -1,0 +1,102 @@
+"use client"; // We need this because we're using hooks and browser APIs
+
+import { useEffect, useState } from "react";
+import axios from "axios";
+import { useRouter } from "next/navigation";
+import "@/css/satoshi.css";
+import "@/css/style.css";
+import { Sidebar } from "@/components/Layouts/sidebar";
+import "flatpickr/dist/flatpickr.min.css";
+import "jsvectormap/dist/jsvectormap.css";
+import { Header } from "@/components/Layouts/header";
+import NextTopLoader from "nextjs-toploader";
+import { Providers } from "./providers";
+
+export default function RootLayout({ children }: { children: React.ReactNode }) {
+  const [isAdmin, setIsAdmin] = useState<boolean | null>(null);
+  const router = useRouter();
+
+  useEffect(() => {
+    const checkUserRole = async () => {
+      try {
+        const token = localStorage.getItem("token");
+
+        if (!token) {
+          router.push("http://localhost:3001");
+          return;
+        }
+
+        const response = await axios.get("http://localhost:3000/user/session", {
+          headers: { Authorization: `Bearer ${token}` },
+          withCredentials: true,
+        });
+
+        if (response.data.status === "SUCCESS") {
+          setIsAdmin(response.data.user.role === "admin");
+        } else {
+          setIsAdmin(false);
+        }
+      } catch (error) {
+        console.error("Error checking admin status:", error);
+        setIsAdmin(false);
+      }
+    };
+
+    checkUserRole();
+  }, [router]);
+
+  if (isAdmin === null) {
+    // Loading state
+    return (
+      <html lang="en">
+        <body>
+          <div className="flex items-center justify-center min-h-screen">
+            <div className="min-h-screen bg-gray-2 dark:bg-[#020d1a] flex items-center justify-center">
+              <div className="text-center p-8">
+                <h1 className="text-2xl font-bold mb-4">Access Denied</h1>
+                <p>You don't have permission to access this page.</p>
+              </div>
+            </div>
+          </div>
+          
+        </body>
+      </html>
+    );
+  }
+
+  if (!isAdmin) {
+    // Access denied state
+    return (
+      <html lang="en">
+        <body>
+          <div className="min-h-screen bg-gray-2 dark:bg-[#020d1a] flex items-center justify-center">
+            <div className="text-center p-8">
+              <h1 className="text-2xl font-bold mb-4">Access Denied</h1>
+              <p>You don't have administrator privileges</p>
+            </div>
+          </div>
+        </body>
+      </html>
+    );
+  }
+
+  // Admin view - original layout
+  return (
+    <html lang="en" suppressHydrationWarning>
+      <body>
+        <Providers>
+          <NextTopLoader showSpinner={false} />
+          <div className="flex min-h-screen">
+            <Sidebar />
+            <div className="w-full bg-gray-2 dark:bg-[#020d1a]">
+              <Header />
+              <main className="isolate mx-auto w-full max-w-screen-2xl overflow-hidden p-4 md:p-6 2xl:p-10">
+                {children}
+              </main>
+            </div>
+          </div>
+        </Providers>
+      </body>
+    </html>
+  );
+}

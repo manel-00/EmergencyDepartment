@@ -25,8 +25,8 @@ export default function Page() {
         const currentUser = response.data.user;
 
         if (currentUser.role !== "admin") {
-          alert("⛔ Accès refusé. Vous n’êtes pas un administrateur.");
-          router.push("http://localhost:3001"); // redirection vers le front normal
+          alert("⛔ Acces denied. Admin only interface.");
+          router.push("http://localhost:3001"); // redirection
           return;
         }
 
@@ -61,7 +61,7 @@ export default function Page() {
       window.dispatchEvent(new Event('userLoggedOut'));
   
       setUser (null);
-      router.push("/signin");
+      router.push("http://localhost:3001/signin");
     } catch (error) {
       console.error("❌ Échec de la déconnexion:", error);
     }

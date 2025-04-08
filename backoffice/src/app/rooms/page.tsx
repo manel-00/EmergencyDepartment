@@ -10,7 +10,7 @@ import Breadcrumb from "@/components/Breadcrumbs/Breadcrumb";
 
 
 
-const API_URL = "http://localhost:3000/room"; // Adjust this to match your backend URL
+const API_URL = "http://localhost:3000/room"; 
 
 
 
