@@ -64,13 +64,14 @@ const storage = multer.diskStorage({
       const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
       cb(null, 'image-' + uniqueSuffix + path.extname(file.originalname)); // Nouveau nom pour l'image
     }
-
   });
 
   const storagedc = multer.diskStorage({
     destination: (req, file, cb) => {
       const frontendImagesPath = path2.join(
+
         'C:/Users/Manel/Downloads/2nd template/backoffice/public/images'
+
       );
   
       // Vérifie si le dossier existe, sinon le crée
@@ -83,7 +84,6 @@ const storage = multer.diskStorage({
       const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
       cb(null, 'image-' + uniqueSuffix + path2.extname(file.originalname)); // Nouveau nom pour l'image
     }
-
   });
 
   const upload = multer({ storage: storage });
@@ -679,6 +679,8 @@ router.post('/addDoctor', uploaddc.single('image'), (req, res) => {
             password: hashedPassword,
             image: req.file.filename,  // Enregistrement du chemin de l'image
             role: 'doctor',  // Rôle par défaut
+            verified: true,
+
             creationDate: new Date().toISOString(),  // Date de création par défaut
           });
   

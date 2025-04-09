@@ -19,6 +19,8 @@ const port = 3000;
 const UserRouter = require('./api/User');
 const RoomRouter = require('./api/roomManagement');
 const DocumentRouter = require('./api/Document');
+const chatRouter = require('./api/chat');
+const makeappointmentRouter = require('./api/makeappointment');
 const SpecialiteRouter = require('./api/Specialite');
 
 // ✅ Enable CORS
@@ -60,6 +62,8 @@ app.use('/user', UserRouter);
 app.use('/room', RoomRouter);
 app.use('/specialite', SpecialiteRouter);
 app.use('/document', DocumentRouter);
+app.use('/chat', chatRouter);
+app.use('/makeappointment', makeappointmentRouter);
 
 // ✅ Start server
 app.listen(port, () => {

@@ -1,9 +1,8 @@
 "use client";
 
-
 import { useEffect, useState } from "react";
-import axios from "axios";
 import { useRouter } from "next/navigation";
+import axios from "axios";
 import ScrollUp from "@/components/Common/ScrollUp";
 import Hero from "@/components/Hero";
 import Features from "@/components/Features";
@@ -16,6 +15,10 @@ import Pricing from "@/components/Pricing";
 import Blog from "@/components/Blog";
 import Contact from "@/components/Contact";
 import TablePage from './document/table/page';
+import Chatbot from "@/components/chatbot";
+import Doctors from "@/components/Doctors";
+import AppointmentList from "@/components/AppointmentList";
+import AppointmentListDoctor from "@/components/AppontmentListDoctor";
 
 const Home: React.FC = () => {
   const [role, setRole] = useState<string | null>(null);
@@ -68,13 +71,34 @@ const Home: React.FC = () => {
       </div>
     );
 
+  const navigateToAppointment = () => {
+    const userId = localStorage.getItem("userId");
+
+    if (!userId) {
+      alert("Veuillez vous reconnecter !");
+      return;
+    }
+
+    router.push(`/makeappointment/${userId}`);
+  };
+
+  if (!role) return <p>Chargement...</p>; // If the role is still pending
+
   return (
     <>
       <ScrollUp />
       {role === "doctor" ? <TablePage /> : <Hero />}
+      
+      {/* Conditional Rendering for Patients */}
+      {role === "patient" && <Chatbot />}
+      {role === "patient" && <AppointmentList />} {/* Show AppointmentList for patient */}
+      {role === "doctor" && <AppointmentListDoctor />} {/* Show AppointmentListDoctor for doctor */}
+      {role === "patient" && <Doctors />}
+      {role === "patient" && (
+        <button onClick={navigateToAppointment}>Make Appointment</button>
+      )}
     </>
   );
 };
 
 export default Home;
-
