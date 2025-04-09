@@ -270,7 +270,7 @@ Add Room
         >
         <td className="px-6 py-4 text-sm">{room._id}</td>
 
-            <td className="px-3 py-4 text-sm"> Room {room.number} (0)</td>
+            <td className="px-3 py-4 text-sm"> Room {room.number} </td>
 
 
             <td className="px-6 py-4 text-sm">{room.type} </td>

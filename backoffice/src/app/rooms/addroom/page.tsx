@@ -16,7 +16,7 @@ function AddRoom() {
     type: '',
     floor: 0,
     ward: '0', 
-    state: "Available",
+    state: "Unavailable",
   });
 
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -218,144 +218,7 @@ function AddRoom() {
 
 
 
- <div className="min-h-screen bg-gray-100 p-8">
 
-  
-
-
-
-
-
-
-      <div className="max-w-4xl mx-auto">
-
-   
-
-
-
-        <h1 className="text-3xl font-bold text-gray-800 mb-8">Room Management</h1>
-
-
-        <div>
-            <h1 className="text-2xl font-semibold">Workspaces / New</h1>
-          </div>
-          <div className="flex gap-2">
-            <button  >
-              Discard
-            </button>
-            <button type="submit">Save</button>
-          </div>
-        
-
-
-
-
-
-
-        {/* Room Form */}
-        <form onSubmit={handleSubmit} className="bg-white p-6 rounded-lg shadow-md mb-8">
-          <div className="grid grid-cols-1 gap-6">
-            {['number', 'type'].map((field) => (
-              <div key={field}>
-                <label className="block text-sm font-medium text-gray-700 capitalize">{field}</label>
-                <input
-                  type="text"
-                  name={field}
-                  value={formData[field as keyof RoomFormData] as string}
-                  onChange={handleChange}
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                  required
-                />
-              </div>
-            ))}
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700">Floor</label>
-              <select
-                name="floor"
-                value={formData.floor}
-                onChange={handleChange}
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                required
-              >
-                <option value="">Select Floor</option>
-                {[1, 2, 3, 4, 5, 6].map((floorNumber) => (
-                  <option key={floorNumber} value={floorNumber}>Floor {floorNumber}</option>
-                ))}
-              </select>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700">Ward</label>
-              <select
-                name="ward"
-                value={formData.ward}
-                onChange={handleChange}
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                required
-              >
-                <option value="">Select Ward</option>
-                {["psych", "surgical", "bones"].map((wardoption) => (
-                  <option key={wardoption} value={wardoption}>{wardoption}</option>
-                ))}
-              </select>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700">State</label>
-              <input
-                type="number"
-                name="state"
-                value={formData.state}
-                onChange={handleChange}
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                required
-              />
-            </div>
-
-            <button
-              type="submit"
-              className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-            >
-              <Plus className="h-4 w-4 mr-2" />
-              {editingId ? 'Update Room' : 'Add Room'}
-            </button>
-          </div>
-        </form>
-
-        {/* Room List */}
-        <div className="bg-white rounded-lg shadow-md overflow-hidden">
-          {Object.entries(roomsByFloor).map(([floor, rooms]) => (
-            <div key={floor} className="p-4 border-b">
-              <h5 className="text-lg font-semibold">Floor {floor}</h5>
-              <div className="grid grid-cols-4 gap-4 mt-4">
-                {rooms.map((room) => (
-                  <div key={room._id} className="flex items-center space-x-4">
-                    <div className="bg-blue-500 text-white p-4 rounded-full text-sm font-medium">
-                      {room.number}
-                    </div>
-                    {isDetailedView && (
-                      <div>
-                        <div className="text-sm text-gray-900">{room.type}</div>
-                        <div className="text-xs text-gray-500">State: {room.state}</div>
-                      </div>
-                    )}
-                    <div className="flex space-x-2">
-                      <button onClick={() => handleEdit(room)} className="text-blue-600 hover:text-blue-900">
-                        <Pencil className="h-4 w-4" />
-                      </button>
-                      <button onClick={() => handleDelete(room._id)} className="text-red-600 hover:text-red-900">
-                        <Trash2 className="h-4 w-4" />
-                      </button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
-    </div>
     </div>
   );
 }

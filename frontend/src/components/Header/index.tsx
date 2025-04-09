@@ -31,14 +31,6 @@ const Header = () => {
       console.log("🔄 Fetching user session...");
   
       const token = localStorage.getItem("token");
-
-
-      if (!token) {
-        console.warn(" No token found. Skipping session fetch.");
-        return;
-      }
-
-
       const response = await axios.get("http://localhost:3000/user/session", {
         headers: token ? { Authorization: `Bearer ${token}` } : {},
         withCredentials: true,
@@ -52,25 +44,23 @@ const Header = () => {
       } else {
         console.log("⚠️ No active user session.");
       }
-    } catch (error) {
-      console.error("❌ Failed to fetch session:", error);
+    } catch (error: any) {
+      if (error.response?.status !== 401) {
+        // Only show non-401 errors
+        console.error("❌ Failed to fetch session:", error);
+      }
+      // else: do absolutely nothing for 401
     }
+    
   };
   
 
   
   useEffect(() => {
     const checkAccess = async () => {
-      const token = localStorage.getItem("token");
-       // ✅ Don't even make the request if there's no token
-    if (!token) {
-      console.warn("⛔ No token found. Skipping session check.");
-      return;
-    }
-
       try {
-
-
+        const token = localStorage.getItem("token");
+        
         const response = await axios.get("http://localhost:3000/user/session", {
           headers: token ? { Authorization: `Bearer ${token}` } : {},
           withCredentials: true,
@@ -81,9 +71,14 @@ const Header = () => {
           alert("⛔ Accès interdit pour les administrateurs sur cette interface.");
           window.location.href = "http://localhost:3002";
         }
-      } catch (err) {
-        console.error("⛔ Accès refusé ou erreur session :", err);
+      } catch (error: any) {
+        if (error.response?.status !== 401) {
+          // Only show non-401 errors
+          console.error("❌ Failed to fetch session:", error);
+        }
+        // else: do absolutely nothing for 401
       }
+      
     };
   
     checkAccess();
