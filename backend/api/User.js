@@ -50,7 +50,8 @@ transporter.verify((error, success) => {
 const storage = multer.diskStorage({
     destination: (req, file, cb) => {
       const frontendImagesPath = path.join(
-        'C:/Users/21655/Downloads/startup-nextjs-main/startup-nextjs-main/public/images'
+        'C:/Users/Manel/Downloads/2nd template/frontend/public/images'
+
       );
   
       // Vérifie si le dossier existe, sinon le crée
@@ -63,12 +64,13 @@ const storage = multer.diskStorage({
       const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
       cb(null, 'image-' + uniqueSuffix + path.extname(file.originalname)); // Nouveau nom pour l'image
     }
+
   });
 
   const storagedc = multer.diskStorage({
     destination: (req, file, cb) => {
       const frontendImagesPath = path2.join(
-        'C:/Users/21655/Downloads/startup-nextjs-main/startup-nextjs-main/public/images'
+        'C:/Users/Manel/Downloads/2nd template/backoffice/public/images'
       );
   
       // Vérifie si le dossier existe, sinon le crée
@@ -81,6 +83,7 @@ const storage = multer.diskStorage({
       const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
       cb(null, 'image-' + uniqueSuffix + path2.extname(file.originalname)); // Nouveau nom pour l'image
     }
+
   });
 
   const upload = multer({ storage: storage });
@@ -154,6 +157,7 @@ const storage = multer.diskStorage({
             image: req.file.filename,
             faceToken // 🔹 Enregistrer le faceToken
         });
+        console.log("newuser<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<,",newUser);
 
         await newUser.save();
         sendVerificationEmail(newUser, res);
@@ -481,6 +485,7 @@ router.get("/logout", (req, res) => {
 
 router.put("/edit-profile", upload.single("image"), async (req, res) => {
   try {
+    
     const { name } = req.body;
     const userId = req.session.user?.userId; // Ensure session userId is set
 
@@ -969,18 +974,57 @@ router.put("/edit-profile", upload.single("image"), async (req, res) => {
   }
 });
 
-  router.get('/listPatients', async (req, res) => {
+
+router.get('/listPatients', async (req, res) => {
+  try {
+    // On récupère les utilisateurs avec le rôle 'patient' et on exclut le champ 'image'
+    const patients = await User.find({ role: 'patient' }).select('-image'); 
+
+    // Si tout se passe bien, on renvoie les patients
+    res.status(200).json(patients);
+  } catch (error) {
+    console.error('Erreur lors de la récupération des patients :', error);
+    res.status(500).json({ message: 'Erreur serveur' });
+  }
+});
+
+
+
+
+//rassil modified 
+
+  router.get('/listPatientsrassil', async (req, res) => {
     try {
-      // On récupère les utilisateurs avec le rôle 'patient' et on exclut le champ 'image'
-      const patients = await User.find({ role: 'patient' }).select('-image'); 
+      let token = req.cookies.token || req.headers.authorization?.split(" ")[1];
+    
+    if (!token) {
+      console.log("❌ No session and no token found.");
+      return res.status(401).json({ status: "FAILED", message: "No active session" });
+    }
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    console.log("decoded",decoded);
+    if(!decoded){
+      console.log("❌ decoded not valid.");
+      return res.status(401).json({ status: "FAILED", message: "No active session" });
+    }
+    if(decoded.role ==="doctor" || decoded.role === "admin"){
+         // On récupère les utilisateurs avec le rôle 'patient' et on exclut le champ 'image'
+         const patients = await User.find({ role: 'patient' }).select('-image'); 
   
-      // Si tout se passe bien, on renvoie les patients
-      res.status(200).json(patients);
+         // Si tout se passe bien, on renvoie les patients
+         res.status(200).json(patients);
+    }else{
+      return res.status(401).json({ status: "FAILED", message: "wrong user" });
+    }
+   
+    
     } catch (error) {
       console.error('Erreur lors de la récupération des patients :', error);
       res.status(500).json({ message: 'Erreur serveur' });
     }
   });
+
+
   router.delete('/deletePatient/:id', async (req, res) => {
     const { id } = req.params;
     
@@ -999,6 +1043,7 @@ router.put("/edit-profile", upload.single("image"), async (req, res) => {
     }
   });  
 
+// rassil added 
 // PUT /user/update/:id
 router.put("/update/:id", async (req, res) => {
   const { name, lastname } = req.body;
@@ -1011,5 +1056,112 @@ router.put("/update/:id", async (req, res) => {
   }
 });
 
+//rassil added
+router.get('/:id/image-filename', async (req, res) => {
+  try {
+    const user = await User.findById(req.params.id).select('image -_id'); // Only returns the image field
+    console.log(user,"user<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<");
+    // Check if user and image exist
+     console.log(user.image,"user.image<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<");
+    
+    if (!user || !user.image) {
+      return res.status(404).json({ 
+        status: 'FAILED', 
+        message: 'User or image not found' 
+      });
+    }
+
+    // Return just the filename string
+    res.json({ 
+      status: 'SUCCESS',
+      imageFilename: user.image 
+    });
+
+  } catch (error) {
+    console.error('❌ Error fetching image filename:', error);
+    res.status(500).json({ 
+      status: 'FAILED',
+      message: 'Server error' 
+    });
+  }
+});
+//rassil added
+router.get("/getUser/:id", async (req, res) => {
+  try {
+    // Get token from cookies or authorization header
+    let token = req.cookies.token || req.headers.authorization?.split(" ")[1];
+    
+    if (!token) {
+      console.log("❌ No session and no token found.");
+      return res.status(401).json({ status: "FAILED", message: "No active session" });
+    }
+    
+    // Verify the token
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    console.log("decoded", decoded);
+    
+    if (!decoded) {
+      console.log("❌ decoded not valid.");
+      return res.status(401).json({ status: "FAILED", message: "No active session" });
+    }
+    
+    // Get userId from params
+    const userId = req.params.id;
+    const user = await User.findById(userId).select("-password"); // Exclude password for security
+
+    if (!user) {
+      return res.status(404).json({ 
+        status: "FAILED", 
+        message: "User not found" 
+      });
+    }
+
+    res.status(200).json({
+      status: "SUCCESS",
+      user: {
+        userId: user._id,
+        name: user.name,
+        lastname: user.lastname,
+        email: user.email,
+        role: user.role,
+        image: user.image,
+        verified: user.verified,
+        creationDate: user.creationDate,
+        specialty: user.specialty // Include if needed
+      }
+    });
+  } catch (error) {
+    console.error("❌ Error fetching user:", error);
+    
+    // Check if error is due to JWT verification
+    if (error.name === "JsonWebTokenError") {
+      return res.status(401).json({
+        status: "FAILED",
+        message: "Invalid token"
+      });
+    }
+    
+    // Check if error is due to expired token
+    if (error.name === "TokenExpiredError") {
+      return res.status(401).json({
+        status: "FAILED",
+        message: "Token expired"
+      });
+    }
+    
+    // Check if error is due to invalid ID format
+    if (error.name === "CastError" && error.kind === "ObjectId") {
+      return res.status(400).json({ 
+        status: "FAILED", 
+        message: "Invalid user ID format" 
+      });
+    }
+    
+    res.status(500).json({ 
+      status: "FAILED", 
+      message: "Server error while fetching user" 
+    });
+  }
+});
 
 module.exports = router;

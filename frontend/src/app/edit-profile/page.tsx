@@ -143,6 +143,17 @@ export default function EditProfile() {
         >
           {loading ? "Saving..." : "Save Changes"}
         </button>
+<<<<<<< HEAD
+=======
+         {/* New Button to Document Page */}
+         <button
+          type="button"
+          className="w-full bg-green-500 text-white py-2 rounded hover:bg-green-600 transition-all mt-2"
+          onClick={() => router.push("/document")}
+        >
+          Document Page
+        </button>
+>>>>>>> ea63163a2550d76ea45bb77ba21cb1884c75c017
       </form>
     </div>
   );

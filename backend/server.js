@@ -1,59 +1,67 @@
-// MongoDB connection
+// ✅ MongoDB connection
 require('./config/db');
+
+// ✅ Required modules
 const express = require('express');
 const session = require('express-session');
 const passport = require('passport');
 const cors = require("cors");
-const app = express();
-const port = 3000;
-const UserRouter = require('./api/User');
-const RoomRouter = require('./api/roomManagement');
-
-const specialiteRouter = require('./api/Specialite');
-require('dotenv').config();
 const cookieParser = require("cookie-parser");
 const MongoStore = require("connect-mongo");
+require('dotenv').config();
+const mongoose = require('mongoose');
 
-// ✅ Enable CORS (Make sure credentials are allowed)
+// ✅ Initialize Express app
+const app = express();
+const port = 3000;
+
+// ✅ Import routes
+const UserRouter = require('./api/User');
+const RoomRouter = require('./api/roomManagement');
+const DocumentRouter = require('./api/Document');
+const SpecialiteRouter = require('./api/Specialite');
+
+// ✅ Enable CORS
 app.use(cors({
-  origin: ["http://localhost:5173","http://localhost:3001", "http://localhost:3002"], // ✅ Allow both
-  credentials: true, // Important pour cookies + sessions
+  origin: ["http://localhost:5173", "http://localhost:3001", "http://localhost:3002"],
+  credentials: true
 }));
 
+// ✅ Middlewares
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-
-// ✅ Enable Cookie Parser
 app.use(cookieParser());
 
-// ✅ Configure Express Sessions with MongoDB Store
+// ✅ Configure session with MongoDB store
 app.use(session({
   secret: process.env.SESSION_SECRET || 'supersecretkey',
   resave: false,
   saveUninitialized: false,
   store: MongoStore.create({
-    mongoUrl: "mongodb://localhost:27017/EmergencyMangment", // ✅ Replace with your database
-    ttl: 24 * 60 * 60 // ✅ 1-day session expiry
+    mongoUrl: "mongodb://localhost:27017/EmergencyMangment",
+    ttl: 24 * 60 * 60 // 1-day session expiry
   }),
   cookie: {
     httpOnly: true,
-    secure: false, // ✅ Change to `true` if using HTTPS
+    secure: false, // Set to true in production with HTTPS
     sameSite: "lax",
-    maxAge: 24 * 60 * 60 * 1000 // ✅ 1-day expiration
+    maxAge: 24 * 60 * 60 * 1000 // 1-day
   }
 }));
 
-// ✅ Test Session Route
+// ✅ Test route for session
 app.get("/test-session", (req, res) => {
   req.session.test = "Session is working!";
   res.json({ message: "Session saved!", session: req.session });
 });
 
-// Routes
+// ✅ Routes
 app.use('/user', UserRouter);
 app.use('/room', RoomRouter);
-app.use('/specialite', specialiteRouter);
+app.use('/specialite', SpecialiteRouter);
+app.use('/document', DocumentRouter);
 
+// ✅ Start server
 app.listen(port, () => {
-    console.log(`✅ Server is running on port ${port}`);
+  console.log(`✅ Server is running on port ${port}`);
 });
