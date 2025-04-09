@@ -10,8 +10,8 @@ interface Bed {
   number: string;
   state: "available" | "occupied" | "maintenance";
   free: boolean;
-  room: { _id: string } | null; // Room can be null
-  patient?: { _id: string } | null; // Patient can be null
+  room: { _id: string, number: string } | null; // Room can be null
+  patient?: { _id: string, name: string, lastname: string } | null; // Patient can be null
 }
 
 const BedManagement = () => {
@@ -86,6 +86,8 @@ const BedManagement = () => {
               <div>
                 <h3 className="text-lg font-medium text-gray-900">Bed Number: {bed.number}</h3>
                 <p className="text-sm text-gray-500">Room ID: {bed.room ? bed.room._id : "No Room"}</p>
+                <p className="text-sm text-gray-500">Room Number: {bed.room ? bed.room.number : "No Room"}</p>
+
               </div>
               <div className="text-right">
               </div>
@@ -93,8 +95,11 @@ const BedManagement = () => {
             <div className="flex justify-between items-center">
               {bed.patient ? (
                 <div className="flex items-center text-green-600 text-sm">
-                  <span>Patient ID: {bed.patient._id}</span>
+                  <span>Patient : {bed.patient.name} {bed.patient.lastname} </span>
+
                 </div>
+                
+                
               ) : (
                 <div className="flex items-center text-gray-600 text-sm">
                   <span>No Patient</span>
