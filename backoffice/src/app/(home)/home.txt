@@ -1,0 +1,55 @@
+"use client";
+
+import React, { useEffect, useState } from "react";
+import axios from "axios";
+import { useRouter } from "next/navigation";
+
+const AdminDashboard = () => {
+  const [loading, setLoading] = useState(true); // To manage loading state
+  const router = useRouter(); // Next.js router
+
+  useEffect(() => {
+    const checkUserRole = async () => {
+      try {
+        const token = localStorage.getItem("token");
+
+        if (!token) {
+          router.push("http://localhost:3001"); // If no token, redirect to sign-in
+          return;
+        }
+
+        // Validate session and check the user's role
+        const response = await axios.get("http://localhost:3000/user/session", {
+          headers: { Authorization: `Bearer ${token}` },
+          withCredentials: true,
+        });
+
+        if (response.data.status === "SUCCESS") {
+          const currentUser = response.data.user;
+
+          // If the user is not an admin, redirect them to http://localhost:3001
+          if (currentUser.role !== "admin") {
+            router.push("http://localhost:3001"); // Redirect to homepage or other page
+            return;
+          }
+        } else {
+          router.push("http://localhost:3001"); // Redirect if no session exists
+        }
+      } catch (error) {
+        console.error("❌ Error fetching session:", error);
+        router.push("http://localhost:3001"); // Redirect if there is an error
+      } finally {
+        setLoading(false); // Stop loading once the check is done
+      }
+    };
+
+    checkUserRole(); // Run the function on component mount
+  }, [router]);
+
+  // Return nothing while loading or if the user isn't an admin
+  if (loading) return null; // Prevent the component from rendering any UI during the loading state
+
+  return null; // Don't render anything if not an admin
+};
+
+export default AdminDashboard;

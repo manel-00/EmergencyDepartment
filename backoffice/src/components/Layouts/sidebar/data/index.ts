@@ -1,4 +1,5 @@
 import * as Icons from "../icons";
+import { Pencil,Trash2,CheckCircle, AlertCircle  } from "lucide-react";
 
 export const NAV_DATA = [
   {
@@ -12,20 +13,27 @@ export const NAV_DATA = [
         icon: Icons.User,
         items: [],
       },
+      
       {
         title: "Rooms",
         url: "/rooms",
-        icon: Icons.User,
+        icon: Icons.HomeIcon,
         items: [],
       },
 
       {
-        title: "Roomtable",
-        url: "/roomtable",
-        icon: Icons.User,
+        title: "Hospital Beds",
+        url: "/beds",
+        icon: Icons.FourCircle,
         items: [],
       },
       
+      {
+        title: "New room",
+        url: "/newroom",
+        icon: Icons.User,
+        items: [],
+      },
       
 
      

@@ -2,87 +2,30 @@
 
 import React, { useState, useEffect } from "react";
 import axios from "axios";
-import { Plus, Pencil, Trash2 } from "lucide-react";
+import { Plus, Pencil, Trash2,Waypoints } from "lucide-react";
+import { SearchIcon } from "@/assets/icons";
 import { Room, RoomFormData } from "./types";
-
-const API_URL = "http://localhost:3000/room"; // Adjust this to match your backend URL
-
-const DashboardPanel = () => {
-  const data = [
-    { label: "Occupied Rooms", value: 7, color: "bg-red-600" }, // Critical
-    { label: "Available Rooms", value: 3, color: "bg-green-600" }, // Safe
-    { label: "Patients Admitted Today", value: 5, color: "bg-blue-600" }, // Medical
-    { label: "Pending Cleaning Requests", value: 1, color: "bg-orange-500" }, // Attention
-  ];
-
-  return (
-    <div className="grid grid-cols-4 gap-4 p-6 bg-gray-100 rounded-lg shadow-lg mx-auto mb-6">
-      {data.map((item, index) => (
-        <div
-          key={index}
-          className={`p-6 text-white text-center rounded-lg shadow-md ${item.color}`}
-        >
-          <p className="text-lg font-semibold">{item.label}</p>
-          <p className="text-2xl font-bold">{item.value}</p>
-        </div>
-      ))}
-    </div>
-  );
-};
+import Link from "next/link";
+import Breadcrumb from "@/components/Breadcrumbs/Breadcrumb";
 
 
-const StaticTable = () => {
-  return (
-    <div className="bg-white rounded-lg shadow-md overflow-hidden mb-6">
-      <h3 className="text-xl font-semibold mb-4">Static Room Table</h3>
-      <table className="min-w-full table-auto">
-        <thead>
-          <tr>
-            <th className="px-4 py-2 text-left">Room Number</th>
-            <th className="px-4 py-2 text-left">Type</th>
-            <th className="px-4 py-2 text-left">Floor</th>
-            <th className="px-4 py-2 text-left">Ward</th>
-            <th className="px-4 py-2 text-left">State</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td className="border px-4 py-2">101</td>
-            <td className="border px-4 py-2">Single</td>
-            <td className="border px-4 py-2">1</td>
-            <td className="border px-4 py-2">Psych Ward</td>
-            <td className="border px-4 py-2">Occupied</td>
-          </tr>
-          <tr>
-            <td className="border px-4 py-2">102</td>
-            <td className="border px-4 py-2">Double</td>
-            <td className="border px-4 py-2">2</td>
-            <td className="border px-4 py-2">Surgical Ward</td>
-            <td className="border px-4 py-2">Available</td>
-          </tr>
-          <tr>
-            <td className="border px-4 py-2">103</td>
-            <td className="border px-4 py-2">Single</td>
-            <td className="border px-4 py-2">3</td>
-            <td className="border px-4 py-2">Emergency Ward</td>
-            <td className="border px-4 py-2">Occupied</td>
-          </tr>
-          <tr>
-            <td className="border px-4 py-2">104</td>
-            <td className="border px-4 py-2">Double</td>
-            <td className="border px-4 py-2">4</td>
-            <td className="border px-4 py-2">Psych Ward</td>
-            <td className="border px-4 py-2">Cleaning</td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
-  );
-};
+
+const API_URL = "http://localhost:3000/room"; 
+
+
+
+
+
+
 
 
 function App() {
-  const [rooms, setRooms] = useState<Room[]>([]); // Store the room data here
+  const [rooms, setRooms] = useState<Room[]>([]); 
+  const [totalRoomsCount, setTotalRoomsCount] = useState<number>(0); 
+  const [totalBedsCount, setTotalBedsCount] = useState<number>(0); 
+  const [freeBedsCount, setFreeBedsCount] = useState<number>(0);   
+ 
+
   const [formData, setFormData] = useState<RoomFormData>({
     number: "",
     type: "",
@@ -94,7 +37,9 @@ function App() {
 
   // List of predefined floors and wards
   const floors = [1, 2, 3, 4, 5, 6];
-  const wards = ["Psych Ward", "Surgical Ward", "Emergency Ward"];
+  const wards = ["Infectious Diseases Ward","Psych Ward", "Surgical Ward", "Cardiology Ward", "Neurology Ward"];
+
+
 
   // Search state for floor and ward
   const [query, setQuery] = useState({ floor: "", ward: "" });
@@ -105,6 +50,10 @@ function App() {
 
   useEffect(() => {
     fetchAllRooms(); // Fetch all rooms when the component loads
+    fetchTotalRoomsCount(); // Fetch the total rooms count on load
+    fetchTotalBedsCount(); // Fetch total beds count on load
+    fetchFreeBedsCount();   // Fetch free beds count on load
+
   }, []);
 
   const fetchRooms = async () => {
@@ -128,6 +77,34 @@ function App() {
     }
   };
 
+  const fetchTotalRoomsCount = async () => {
+    try {
+      const response = await axios.get(`${API_URL}/count`); // Assuming you have this backend route
+      setTotalRoomsCount(response.data.totalRooms);
+    } catch (error) {
+      console.error("Error fetching total rooms count:", error);
+    }
+  };
+
+  const fetchTotalBedsCount = async () => {
+    try {
+      const response = await axios.get(`${API_URL}/countbeds`); // Using /room/countbeds
+      setTotalBedsCount(response.data.totalBeds); // Assuming the backend returns the count directly or in an object
+    } catch (error) {
+      console.error("Error fetching total beds count:", error);
+    }
+  };
+
+  const fetchFreeBedsCount = async () => {
+    try {
+      const response = await axios.get(`${API_URL}/countbeds/free`); // Using /room/countbeds/free
+      setFreeBedsCount(response.data.freeBeds); // Assuming the backend returns the count directly or in an object
+    } catch (error) {
+      console.error("Error fetching free beds count:", error);
+    }
+  };
+
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
@@ -140,6 +117,10 @@ function App() {
       setEditingId(null);
       fetchRooms(); // Refresh rooms after submit
       fetchAllRooms(); // Refresh all rooms after submit
+      fetchTotalRoomsCount(); // Refresh count after submit
+      fetchTotalBedsCount(); // Refresh beds count after submit
+      fetchFreeBedsCount();   // Refresh free beds count after submit
+
     } catch (error) {
       console.error("Error saving room:", error);
     }
@@ -160,6 +141,10 @@ function App() {
       await axios.delete(`${API_URL}/${id}`);
       fetchRooms(); // Refresh rooms after delete
       fetchAllRooms(); // Refresh all rooms after delete
+      fetchTotalRoomsCount(); // Refresh count after delete
+      fetchTotalBedsCount(); // Refresh beds count after delete
+      fetchFreeBedsCount();   // Refresh free beds count after delete
+
     } catch (error) {
       console.error("Error deleting room:", error);
     }
@@ -180,59 +165,76 @@ function App() {
 
   
   return (
-    <div className="min-h-screen bg-gray-800 p-8">
+    <div >
+   <Breadcrumb pageName="Hospital Rooms List" />
 
 
+ {/* Stats Cards and Search */}
+<div className="grid grid-cols-7 gap-2 mb-6">
+<div className="bg-[#00A09D] text-white p-4">
+          <div className="text-3xl font-bold">{totalRoomsCount}</div> {/* Display the totalRoomsCount */}
+          <div className="text-sm">Total Rooms</div>
+        </div>
+  <div className="bg-[#00A09D] text-white p-4">
+    <div className="text-4xl font-bold">{totalBedsCount}</div>
+    <div className="text-sm">Total Beds</div>
+  </div>
+  <div className="bg-[#00A09D] text-white p-4">
+    <div className="text-3xl font-bold">{freeBedsCount}</div>
+    <div className="text-sm">Free Beds</div>
+  </div>
 
-{/* Rooms List Div */}
-<div className="overflow-x-auto bg-gray-800 text-white p-2">
-  <div className="text-left text-s font-medium">
-    Rooms List
+  {/* Search Form */}
+  <div className="col-span-4 rounded p-4 shadow">
+    <div className="space-y-3">
+      <div className="relative">
+        <div  className="text-xl font-semibold mb-4"> Search Rooms By :</div>
+        
+      </div>
+
+      <div className="flex gap-3">
+        {/* Floor Filter */}
+        <select
+          name="floor"
+          value={query.floor}
+          onChange={handleSearchChange}
+          className="flex-1 px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+        >
+          <option value="">Filter by floor</option>
+          {floors.map((floor) => (
+            <option key={floor} value={floor}>
+              Floor N {floor}
+            </option>
+          ))}
+        </select>
+
+        {/* Ward Filter */}
+        <select
+          name="ward"
+          value={query.ward}
+          onChange={handleSearchChange}
+          className="flex-1 px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+        >
+          <option value="">Filter by ward</option>
+          {wards.map((ward) => (
+            <option key={ward} value={ward}>
+              {ward}
+            </option>
+          ))}
+        </select>
+      </div>
+    </div>
   </div>
 </div>
-<div className="min-h-screen bg-gray-100 p-8">
+<Link href="/rooms/addroom">
+<button className="bg-[#008B8B] text-white font-bold uppercase px-4 py-2  shadow hover:bg-[#006A6A]">
+Add Room
+      </button>
+</Link>
 
-
-
-{/* Search Form */}
-<div className="mb-6">
-          <h3 className="text-xl font-semibold mb-4">Search Rooms By :</h3>
-          <div className="flex space-x-4">
-            <div>
-              <select
-                name="floor"
-                value={query.floor}
-                onChange={handleSearchChange}
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-              >
-                <option value=""> Select Floor</option>
-                {floors.map((floor) => (
-                  <option key={floor} value={floor}>
-                    Floor N {floor}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div>
-              <select
-                name="ward"
-                value={query.ward}
-                onChange={handleSearchChange}
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-              >
-                <option value="">Select Ward</option>
-                {wards.map((ward) => (
-                  <option key={ward} value={ward}>
-                    {ward}
-                  </option>
-                ))}
-              </select>
-            </div>
-          </div>
-        </div>
 
        {/* Table for All Rooms */}
-<div className="overflow-x-auto bg-white rounded-lg shadow-md mb-6">
+<div className="overflow-x-auto  rounded-lg shadow-md mb-6">
   <h3 className="text-xl font-semibold mb-4">All Rooms</h3>
   {rooms.length === 0 ? (
     <p>No rooms available in the database.</p>
@@ -240,21 +242,38 @@ function App() {
     <table className="min-w-full table-auto border-collapse text-left">
       <thead className="bg-gray-800 text-white">
         <tr>
-          <th className="px-3 py-3 text-xs font-large">Room Number</th>
-          <th className="px-6 py-3 text-xs font-medium">Type</th>
+        <th className="px-3 py-3 text-xs font-large">ID</th>
+          <th className="px-6 py-4 text-m font-large">Room Number</th>
+
+
+          <th className="px-6 py-3 text-xs font-medium">Capacity</th>
           <th className="px-6 py-3 text-xs font-medium">Floor</th>
           <th className="px-6 py-3 text-xs font-medium">Ward</th>
           <th className="px-6 py-3 text-xs font-medium">State</th>
           <th className="px-6 py-3 text-xs font-medium">Actions</th>
           <th className="px-6 py-3 text-xs font-medium">Actions</th>
+         
+
 
         </tr>
       </thead>
       <tbody>
         {rooms.map((room) => (
-          <tr key={room._id} className="border-b">
-            <td className="px-3 py-4 text-sm">{room.number}</td>
-            <td className="px-6 py-4 text-sm">{room.type}</td>
+          <tr 
+          key={room._id}
+          className={`
+    even:bg-gray-300 odd:bg-white text-gray-900
+    dark:even:bg-gray-800 dark:odd:bg-transparent dark:text-white
+
+
+          `}
+        >
+        <td className="px-6 py-4 text-sm">{room._id}</td>
+
+            <td className="px-3 py-4 text-sm"> Room {room.number} </td>
+
+
+            <td className="px-6 py-4 text-sm">{room.type} </td>
             <td className="px-6 py-4 text-sm">{room.floor}</td>
             <td className="px-6 py-4 text-sm">{room.ward}</td>
             <td className="px-6 py-4 text-sm">{room.state}</td>
@@ -263,16 +282,28 @@ function App() {
                 onClick={() => handleEdit(room)}
                 className="text-blue-500 hover:text-blue-700 mr-4"
               >
-                <Pencil className="h-4 w-4" />
+               
               </button>
               <button
                 onClick={() => handleDelete(room._id)}
                 className="text-red-500 hover:text-red-700"
               >
                 <Trash2 className="h-4 w-4" />
+
               </button>
             </td>
-            <td className="px-6 py-4 text-sm">assign patient</td>
+            <td className="px-6 py-4 font-medium text-primary ">
+            <Link href={`/rooms/${room._id}`}>
+              view details
+            </Link>
+
+
+            </td>
+
+
+        
+
+            
 
           </tr>
         ))}
@@ -286,74 +317,10 @@ function App() {
 
 
     
-      <div className="max-w-4xl mx-auto">
-        <h1 className="text-3xl font-bold text-gray-800 mb-8">Room Management</h1>
-
-        {/* Dashboard Panel */}
-        <DashboardPanel />
-
-        
-
-        {/* Toggle Button */}
-        <div className="mb-4">
-          <button
-            onClick={toggleView}
-            className="text-gray-600 hover:text-gray-900 flex items-center"
-          >
-            <span className="mr-2">{isDetailedView ? "<" : ">"}</span>
-            <span>{isDetailedView ? "Show Only Numbers" : "Show Details"}</span>
-          </button>
-        </div>
-
-
-
-
-
-
-
-        {/* Room List (Filtered by query) */}
-        <div className="bg-white rounded-lg shadow-md overflow-hidden mb-6">
-          {rooms.length === 0 ? (
-            <p>No rooms found for the selected query.</p>
-          ) : (
-            rooms.map((room) => (
-              <div key={room._id} className="mb-4 p-4 border-b">
-                <h5>Room Number: {room.number}</h5>
-                <h6>Ward: {room.ward}</h6>
-                {isDetailedView && (
-                  <>
-                    <p>Type: {room.type}</p>
-                    <p>State: {room.state}</p>
-                  </>
-                )}
-                <div>
-                  {isDetailedView && (
-                    <>
-                      <button
-                        onClick={() => handleEdit(room)}
-                        className="text-blue-600 hover:text-blue-900 mr-4"
-                      >
-                        <Pencil className="h-4 w-4" />
-                      </button>
-                      <button
-                        onClick={() => handleDelete(room._id)}
-                        className="text-red-600 hover:text-red-900"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </button>
-                    </>
-                  )}
-                </div>
-              </div>
-            ))
-          )}
-        </div>
-
-        </div>
+      
 
       </div>
 
-    </div>
   );
 }
 
