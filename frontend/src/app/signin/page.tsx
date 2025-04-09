@@ -17,11 +17,9 @@ const SigninPage: React.FC = () => {
   useEffect(() => {
     const checkSession = async () => {
       try {
-        const token = localStorage.getItem("token");
-        if (!token) return;
-
         const sessionResponse = await axios.get("http://localhost:3000/user/session", {
-          headers: { Authorization: `Bearer ${token}` },
+         
+          withCredentials: true,
         });
 
         if (sessionResponse.data.user) {
@@ -274,4 +272,4 @@ const handleFaceLogin = async () => {
 };
 
 export default SigninPage;
- 
+

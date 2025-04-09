@@ -59,7 +59,7 @@ const TwoFactorAuth: React.FC = () => {
 
       if (response.data.status === "SUCCESS") {
         const role = response.data.user.role;
-        // localStorage.setItem("token", response.data.token);
+        localStorage.setItem("token", response.data.token);
         window.dispatchEvent(new Event("refresh-user")); // ✅ Store token
 
       

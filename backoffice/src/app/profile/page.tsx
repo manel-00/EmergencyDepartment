@@ -29,6 +29,10 @@ export default function Page() {
           router.push("http://localhost:3001"); // redirection vers le front normal
           return;
         }
+<<<<<<< HEAD
+=======
+
+>>>>>>> 6d977c167c922fe4e91341936dc8c93c20b15fc4
         setUser(currentUser);
       } else {
         router.push("/signin");

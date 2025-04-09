@@ -14,6 +14,7 @@ const Header = () => {
   const [sticky, setSticky] = useState(false);
   const [user, setUser] = useState(null);
   const router = useRouter();
+  const usePathName = usePathname();
 
   // Handle Sticky Navbar on Scroll
   useEffect(() => {
@@ -118,7 +119,7 @@ const Header = () => {
     router.push("/edit-profile");
   };
 
-  const usePathName = usePathname();
+ 
 
   return (
     <header

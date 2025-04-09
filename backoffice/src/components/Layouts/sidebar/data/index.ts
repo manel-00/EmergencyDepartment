@@ -13,6 +13,15 @@ export const NAV_DATA = [
         items: [],
       },
       {
+<<<<<<< HEAD
+=======
+        title: "Rooms",
+        url: "/rooms",
+        icon: Icons.User,
+        items: [],
+      },
+      {
+>>>>>>> 6d977c167c922fe4e91341936dc8c93c20b15fc4
         title: "doctors",
         icon: Icons.User,
         items: [
