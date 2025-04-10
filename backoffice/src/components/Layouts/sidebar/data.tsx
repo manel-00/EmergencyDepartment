@@ -12,6 +12,8 @@ import {
   ChartBarIcon,
   Cog6ToothIcon,
 } from "@heroicons/react/24/outline";
+import { Pencil,Trash2,CheckCircle, AlertCircle  } from "lucide-react";
+import { FourCircle } from "./icons";
 
 export const NAV_DATA = [
   {
@@ -22,6 +24,24 @@ export const NAV_DATA = [
         icon: HomeIcon,
         items: [],
       },
+
+
+      {
+        title: "Rooms",
+        url: "/rooms",
+        icon: HomeIcon,
+        items: [],
+      },
+
+      {
+        title: "Hospital Beds",
+        url: "/beds",
+        icon: FourCircle,
+        items: [],
+      },
+
+
+
       {
         title: "Téléconsultation",
         icon: VideoCameraIcon,

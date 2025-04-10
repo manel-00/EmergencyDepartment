@@ -2,8 +2,7 @@
 
 import { SidebarProvider } from "@/components/Layouts/sidebar/sidebar-context";
 import { ThemeProvider } from "next-themes";
-<<<<<<< HEAD
-=======
+
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { useRouter } from "next/navigation";
@@ -89,12 +88,12 @@ import { ThemeProvider } from "next-themes";
 
 const isAdmin: boolean = true; // Set to true to show the SidebarProvider
 
->>>>>>> e5bea7b1700e058f0834dceb2adba7755495ac37
+
 
 export function Providers({ children }: { children: React.ReactNode }) {
   return (
     <ThemeProvider defaultTheme="light" attribute="class">
-<<<<<<< HEAD
+
       <SidebarProvider>{children}</SidebarProvider>
     </ThemeProvider>
   );
@@ -116,4 +115,4 @@ export function Providers({ children }: { children: React.ReactNode }) {
   );
 }
  */
->>>>>>> e5bea7b1700e058f0834dceb2adba7755495ac37
+

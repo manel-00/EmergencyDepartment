@@ -5,8 +5,8 @@ import axios from "axios";
 import { useRouter } from "next/navigation";
 
 const AdminDashboard = () => {
-<<<<<<< HEAD
-<<<<<<< HEAD
+
+
   const [user, setUser] = useState(null);
   const router = useRouter();
 
@@ -70,12 +70,7 @@ const AdminDashboard = () => {
   }, []);
 
   if (!user) return <p className="text-white p-10">Chargement...</p>;
-=======
 
->>>>>>> 6d977c167c922fe4e91341936dc8c93c20b15fc4
-=======
-
->>>>>>> e5bea7b1700e058f0834dceb2adba7755495ac37
 
   return (
  
