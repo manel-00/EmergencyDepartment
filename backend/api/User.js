@@ -20,8 +20,6 @@ const path = require('path');
 const path2 = require('path');
 
 
-
-
 const multer = require('multer');
 
 const Specialite = require('../models/Specialite');
@@ -53,7 +51,8 @@ transporter.verify((error, success) => {
 const storage = multer.diskStorage({
     destination: (req, file, cb) => {
       const frontendImagesPath = path.join(
-        'C:/Users/21655/Downloads/startup-nextjs-main/startup-nextjs-main/public/images'
+        'C:/Users/21655/Downloads/facturee/frontend\/public/images'
+
       );
   
       // Vérifie si le dossier existe, sinon le crée
@@ -71,7 +70,9 @@ const storage = multer.diskStorage({
   const storagedc = multer.diskStorage({
     destination: (req, file, cb) => {
       const frontendImagesPath = path2.join(
-        'C:/Users/21655/Downloads/startup-nextjs-main/startup-nextjs-main/public/images'
+
+        'C:/Users/Manel/Downloads/2nd template/backoffice/public/images'
+
       );
   
       // Vérifie si le dossier existe, sinon le crée
@@ -157,6 +158,7 @@ const storage = multer.diskStorage({
             image: req.file.filename,
             faceToken // 🔹 Enregistrer le faceToken
         });
+        console.log("newuser<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<,",newUser);
 
         await newUser.save();
         sendVerificationEmail(newUser, res);
@@ -212,6 +214,9 @@ router.get("/verify/:userId/:uniqueString", (req, res) => {
 const sendOTPVerificationEmail = async ({ _id, email }, res) => {
   try {
       const otp = `${Math.floor(1000 + Math.random() * 9000)}`; // Générer un OTP à 4 chiffres
+
+       // fx Log the OTP to the backend console
+       console.log("Generated OTP (Backend):", otp);
 
       const mailOptions = {
           from: process.env.AUTH_EMAIL,
@@ -672,6 +677,7 @@ router.post('/addDoctor', uploaddc.single('image'), (req, res) => {
             password: hashedPassword,
             image: req.file.filename,  // Enregistrement du chemin de l'image
             role: 'doctor',  // Rôle par défaut
+            verified: true,
             creationDate: new Date().toISOString(),  // Date de création par défaut
           });
   
@@ -958,7 +964,6 @@ router.post("/face-login", upload.single("image"), async (req, res) => {
     }
 
     return res.status(401).json({ message: "Face mismatch, login failed" });
-
   } catch (error) {
     console.error("❌ Face login failed:", error);
     return res.status(500).json({ message: "Face login failed", error: error.message });
@@ -971,16 +976,72 @@ router.post("/face-login", upload.single("image"), async (req, res) => {
 
 
 
+router.put("/edit-profile", upload.single("image"), async (req, res) => {
+  try {
+    const token = req.headers.authorization?.split(" ")[1];
+    if (!token) return res.status(401).json({ message: "Unauthorized. No token provided." });
+
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const user = await User.findById(decoded.userId);
+    if (!user) return res.status(404).json({ message: "User not found" });
+
+    // Update user fields
+    if (req.body.name) user.name = req.body.name;
+    if (req.file) user.image = req.file.filename; // Save the image filename
+
+    await user.save();
+    return res.json({ status: "SUCCESS", user });
+
+  } catch (error) {
+    console.error("❌ Edit Profile Failed:", error);
+    return res.status(500).json({ message: "Profile update failed", error: error.message });
+  }
+});
+
+
+router.get('/listPatients', async (req, res) => {
+  try {
+    // On récupère les utilisateurs avec le rôle 'patient' et on exclut le champ 'image'
+    const patients = await User.find({ role: 'patient' }).select('-image'); 
+
+    // Si tout se passe bien, on renvoie les patients
+    res.status(200).json(patients);
+  } catch (error) {
+    console.error('Erreur lors de la récupération des patients :', error);
+    res.status(500).json({ message: 'Erreur serveur' });
+  }
+});
 
 
 
-  router.get('/listPatients', async (req, res) => {
+
+//rassil modified 
+
+  router.get('/listPatientsrassil', async (req, res) => {
     try {
-      // On récupère les utilisateurs avec le rôle 'patient' et on exclut le champ 'image'
-      const patients = await User.find({ role: 'patient' }).select('-image'); 
+      let token = req.cookies.token || req.headers.authorization?.split(" ")[1];
+    
+    if (!token) {
+      console.log("❌ No session and no token found.");
+      return res.status(401).json({ status: "FAILED", message: "No active session" });
+    }
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    console.log("decoded",decoded);
+    if(!decoded){
+      console.log("❌ decoded not valid.");
+      return res.status(401).json({ status: "FAILED", message: "No active session" });
+    }
+    if(decoded.role ==="doctor" || decoded.role === "admin"){
+         // On récupère les utilisateurs avec le rôle 'patient' et on exclut le champ 'image'
+         const patients = await User.find({ role: 'patient' }).select('-image'); 
   
-      // Si tout se passe bien, on renvoie les patients
-      res.status(200).json(patients);
+         // Si tout se passe bien, on renvoie les patients
+         res.status(200).json(patients);
+    }else{
+      return res.status(401).json({ status: "FAILED", message: "wrong user" });
+    }
+   
+    
     } catch (error) {
       console.error('Erreur lors de la récupération des patients :', error);
       res.status(500).json({ message: 'Erreur serveur' });

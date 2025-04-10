@@ -1,0 +1,57 @@
+pipeline {
+    agent any
+
+    stages {
+        stage('Checkout SCM') {
+            steps {
+                checkout scm
+            }
+        }
+
+        stage('Clean and Install dependencies') {
+            steps {
+                dir('frontend') {
+                    echo 'Cleaning node_modules...'
+                    sh 'rm -rf node_modules'
+                    echo 'Installing dependencies...'
+                    sh 'npm install --legacy-peer-deps'
+                }
+            }
+        }
+
+        // Suppression de l'étape "Unit Test" ou ajout d'une étape vide si nécessaire
+        /*
+        stage('Unit Test') {
+            steps {
+                dir('frontend') {
+                    echo 'Running unit tests...'
+                    sh 'npm test'
+                }
+            }
+        }
+        */
+
+        stage('Build Application') {
+            steps {
+                // Ajoutez ici la commande pour la construction de l'application
+                echo 'Building the application...'
+            }
+        }
+
+        stage('Deploy') {
+            steps {
+                // Ajoutez ici les étapes de déploiement
+                echo 'Deploying the application...'
+            }
+        }
+    }
+
+    post {
+        always {
+            echo 'Pipeline terminé.'
+        }
+        failure {
+            echo 'Le pipeline a échoué.'
+        }
+    }
+}

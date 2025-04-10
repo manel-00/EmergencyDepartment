@@ -25,6 +25,7 @@ export default function Page() {
         const currentUser = response.data.user;
 
         if (currentUser.role !== "admin") {
+<<<<<<< HEAD
           alert("⛔ Accès refusé. Vous n’êtes pas un administrateur.");
           router.push("http://localhost:3001"); // redirection vers le front normal
           return;
@@ -33,6 +34,13 @@ export default function Page() {
 =======
 
 >>>>>>> 6d977c167c922fe4e91341936dc8c93c20b15fc4
+=======
+          alert("⛔ Acces denied. Admin only interface.");
+          router.push("http://localhost:3001"); // redirection
+          return;
+        }
+
+>>>>>>> e5bea7b1700e058f0834dceb2adba7755495ac37
         setUser(currentUser);
       } else {
         router.push("/signin");
@@ -64,7 +72,11 @@ export default function Page() {
       window.dispatchEvent(new Event('userLoggedOut'));
   
       setUser (null);
+<<<<<<< HEAD
       router.push("/signin");
+=======
+      router.push("http://localhost:3001/signin");
+>>>>>>> e5bea7b1700e058f0834dceb2adba7755495ac37
     } catch (error) {
       console.error("❌ Échec de la déconnexion:", error);
     }

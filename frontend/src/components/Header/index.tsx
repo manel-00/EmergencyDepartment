@@ -31,9 +31,9 @@ const Header = () => {
     try {
       console.log("🔄 Fetching user session...");
   
-     
+      const token = localStorage.getItem("token");
       const response = await axios.get("http://localhost:3000/user/session", {
-        
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
         withCredentials: true,
       });
   
@@ -45,9 +45,14 @@ const Header = () => {
       } else {
         console.log("⚠️ No active user session.");
       }
-    } catch (error) {
-      console.error("❌ Failed to fetch session:", error);
+    } catch (error: any) {
+      if (error.response?.status !== 401) {
+        // Only show non-401 errors
+        console.error("❌ Failed to fetch session:", error);
+      }
+      // else: do absolutely nothing for 401
     }
+    
   };
   
 
@@ -55,8 +60,10 @@ const Header = () => {
   useEffect(() => {
     const checkAccess = async () => {
       try {
-       
+        const token = localStorage.getItem("token");
+        
         const response = await axios.get("http://localhost:3000/user/session", {
+          headers: token ? { Authorization: `Bearer ${token}` } : {},
           withCredentials: true,
         });
   
@@ -65,9 +72,14 @@ const Header = () => {
           alert("⛔ Accès interdit pour les administrateurs sur cette interface.");
           window.location.href = "http://localhost:3002";
         }
-      } catch (err) {
-        console.error("⛔ Accès refusé ou erreur session :", err);
+      } catch (error: any) {
+        if (error.response?.status !== 401) {
+          // Only show non-401 errors
+          console.error("❌ Failed to fetch session:", error);
+        }
+        // else: do absolutely nothing for 401
       }
+      
     };
   
     checkAccess();
@@ -105,7 +117,7 @@ const Header = () => {
   const handleLogout = async () => {
     try {
       await axios.get("http://localhost:3000/user/logout", { withCredentials: true });
-      // localStorage.removeItem("token");
+      localStorage.removeItem("token");
       setUser(null);
       router.push("/signin");
     } catch (error) {
@@ -118,8 +130,6 @@ const Header = () => {
   const handleProfileClick = () => {
     router.push("/edit-profile");
   };
-
- 
 
   return (
     <header
@@ -186,11 +196,14 @@ const Header = () => {
                     />
                   </div>
 
+                  <div>{user.name} </div>
+
                   {/* ✅ Logout Button */}
                   <button
                     onClick={handleLogout}
-                    className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded"
-                  >
+                    className="bg-white text-teal-500 border-2 border-teal-500 rounded-md px-4 py-2 font-medium hover:bg-teal-500 hover:text-white focus:outline-none focus:ring-2 focus:ring-teal-500 focus:ring-offset-2 transition duration-150 ease-in-out">
+                    
+                 
                     Logout
                   </button>
                 </>

@@ -272,4 +272,3 @@ const handleFaceLogin = async () => {
 };
 
 export default SigninPage;
-

@@ -8,3 +8,4 @@ export default function ThreeDHumanPage() {
     </div>
   );
 }
+

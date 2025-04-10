@@ -1,74 +1,35 @@
-// MongoDB connection
-const connectDB = require('./config/db');
+// ✅ MongoDB connection
+require('./config/db');
+
+// ✅ Required modules
 const express = require('express');
 const session = require('express-session');
 const passport = require('passport');
 const cors = require("cors");
-const app = express();
-const port = 3000;
-const UserRouter = require('./api/User');
-const specialiteRouter = require('./api/Specialite');
-const RoomRouter = require('./api/roomManagement');
-const consultationRouter = require('./api/routes/consultationRoutes');
-const paiementRouter = require('./api/routes/paiementRoutes');
-const rendezVousRouter = require('./api/routes/rendezVousRoutes');
-const http = require('http');
-const socketIo = require('socket.io');
-const mongoose = require("mongoose");
-const dotenv = require("dotenv");
-require('dotenv').config();
 const cookieParser = require("cookie-parser");
 const MongoStore = require("connect-mongo");
+require('dotenv').config();
+const mongoose = require('mongoose');
+const http = require('http');
+// ✅ Initialize Express app
+const app = express();
+const port = 3000;
+const socketIo = require('socket.io');
+const consultationRouter = require('./api/routes/consultationRoutes');
+const rendezVousRouter = require('./api/routes/rendezVousRoutes');
 
-// Connexion à la base de données
-connectDB();
-
-// ✅ Enable CORS (Make sure credentials are allowed)
+// ✅ Import routes
+const UserRouter = require('./api/User');
+const RoomRouter = require('./api/roomManagement');
+const DocumentRouter = require('./api/Document');
+const chatRouter = require('./api/chat');
+const makeappointmentRouter = require('./api/makeappointment');
+const SpecialiteRouter = require('./api/Specialite');
+const paiementRouter = require('./api/routes/paiementRoutes');
 app.use(cors({
-  origin: ["http://localhost:3001", "http://localhost:3002"], // Autorise les 2 frontends
-  credentials: true, // Important pour cookies + sessions
+  origin: ["http://localhost:5173", "http://localhost:3001", "http://localhost:3002"],
+  credentials: true
 }));
-
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
-
-// ✅ Enable Cookie Parser
-app.use(cookieParser());
-
-// ✅ Configure Express Sessions with MongoDB Store
-app.use(session({
-  secret: process.env.SESSION_SECRET || 'supersecretkey',
-  resave: false,
-  saveUninitialized: false,
-  store: MongoStore.create({
-    mongoUrl: "mongodb://localhost:27017/EmergencyMangment", // ✅ Replace with your database
-    ttl: 24 * 60 * 60 // ✅ 1-day session expiry
-  }),
-  cookie: {
-    httpOnly: true,
-    secure: false, // ✅ Change to `true` if using HTTPS
-    sameSite: "lax",
-    maxAge: 24 * 60 * 60 * 1000 // ✅ 1-day expiration
-  }
-}));
-
-// ✅ Test Session Route
-app.get("/test-session", (req, res) => {
-  req.session.test = "Session is working!";
-  res.json({ message: "Session saved!", session: req.session });
-});
-
-// Routes
-app.use('/user', UserRouter);
-app.use('/room', RoomRouter);
-app.use('/specialite', specialiteRouter);
-
-// Routes de téléconsultation
-app.use('/api/consultations', consultationRouter);
-app.use('/api/paiements', paiementRouter);
-app.use('/api/rendez-vous', rendezVousRouter);
-
-// WebRTC Signaling
 const server = http.createServer(app);
 const io = socketIo(server, {
   cors: {
@@ -76,8 +37,45 @@ const io = socketIo(server, {
     methods: ["GET", "POST"]
   }
 });
+// ✅ Middlewares
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+app.use(cookieParser());
 
-// WebRTC Signaling
+// ✅ Configure session with MongoDB store
+app.use(session({
+  secret: process.env.SESSION_SECRET || 'supersecretkey',
+  resave: false,
+  saveUninitialized: false,
+  store: MongoStore.create({
+    mongoUrl: "mongodb://localhost:27017/EmergencyMangment",
+    ttl: 24 * 60 * 60 // 1-day session expiry
+  }),
+  cookie: {
+    httpOnly: true,
+    secure: false, // Set to true in production with HTTPS
+    sameSite: "lax",
+    maxAge: 24 * 60 * 60 * 1000 // 1-day
+  }
+}));
+
+// ✅ Test route for session
+app.get("/test-session", (req, res) => {
+  req.session.test = "Session is working!";
+  res.json({ message: "Session saved!", session: req.session });
+});
+
+// ✅ Routes
+app.use('/user', UserRouter);
+app.use('/room', RoomRouter);
+app.use('/specialite', SpecialiteRouter);
+app.use('/document', DocumentRouter);
+app.use('/chat', chatRouter);
+app.use('/makeappointment', makeappointmentRouter);
+app.use('/api/consultations', consultationRouter);
+app.use('/api/paiements', paiementRouter);
+app.use('/api/rendez-vous', rendezVousRouter);
+
 io.on('connection', (socket) => {
   console.log('User connected:', socket.id);
 
@@ -105,8 +103,7 @@ io.on('connection', (socket) => {
     console.log('User disconnected:', socket.id);
   });
 });
-
-// Start server
-server.listen(port, () => {
+// ✅ Start server
+app.listen(port, () => {
   console.log(`✅ Server is running on port ${port}`);
 });

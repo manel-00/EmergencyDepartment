@@ -1,5 +1,4 @@
 import * as Icons from "../icons";
-
 export const NAV_DATA = [
   {
     label: "MAIN MENU",
@@ -12,16 +11,34 @@ export const NAV_DATA = [
         icon: Icons.User,
         items: [],
       },
+      {       
+         title: "Rooms",
+        url: "/rooms",
+        icon: Icons.User,
+        items: [],
+      },  
       {
-<<<<<<< HEAD
-=======
         title: "Rooms",
         url: "/rooms",
+        icon: Icons.HomeIcon,
+        items: [],
+      },
+
+      {
+        title: "Hospital Beds",
+        url: "/beds",
+        icon: Icons.FourCircle,
+        items: [],
+      },
+      
+      {
+        title: "New room",
+        url: "/newroom",
         icon: Icons.User,
         items: [],
       },
       {
->>>>>>> 6d977c167c922fe4e91341936dc8c93c20b15fc4
+
         title: "doctors",
         icon: Icons.User,
         items: [

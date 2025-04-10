@@ -1,20 +1,23 @@
 "use client";
-
 import { useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 
 export default function OAuthSuccessPage() {
   const router = useRouter();
-
+  const params = useSearchParams();
+  
   useEffect(() => {
-    // Le token est déjà dans un cookie HTTP-only (secure)
-    // Aucune action côté client n'est nécessaire ici
-    router.push("/"); // Redirige vers la page d'accueil ou dashboard
-  }, [router]);
+    const token = params.get("token");
 
-  return (
-    <p className="text-center text-white mt-20">
-      ✅ Connexion réussie. Redirection en cours...
-    </p>
-  );
+    if (token) {
+      localStorage.setItem("token", token);
+      alert("✅ Connexion réussie via OAuth !");
+      router.push("/"); // ou dashboard
+    } else {
+      alert("❌ Erreur OAuth");
+      router.push("/signin");
+    }
+  }, [params, router]);
+
+  return <p className="text-center text-white mt-20">Connexion en cours...</p>;
 }
