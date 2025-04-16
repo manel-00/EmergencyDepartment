@@ -175,6 +175,38 @@ const handleFaceLogin = async () => {
               </div>
             </form>
           </div>
+          {/* 🔐 Password Reset Request */}
+<div className="mt-6 border-t pt-6">
+  <h4 className="text-center text-lg font-semibold text-gray-700 dark:text-white mb-2">
+    Forgot your password?
+  </h4>
+  <form
+    onSubmit={async (e) => {
+      e.preventDefault();
+      const email = prompt("Enter your email to reset your password:");
+      if (!email) return;
+
+      try {
+        const response = await axios.post("http://localhost:3000/user/requestPasswordReset", {
+          email,
+          redirectUrl: "http://localhost:3001/reset-password", // 🔁 Change this to your actual frontend URL
+        });
+
+        alert(response.data.message);
+      } catch (error: any) {
+        console.error("❌ Password Reset Error:", error.response?.data || error);
+        alert("Password reset request failed.");
+      }
+    }}
+  >
+    <button
+      type="submit"
+      className="w-full text-sm font-medium text-blue-600 hover:underline"
+    >
+      Request Password Reset
+    </button>
+  </form>
+</div>
         </div>
   
         {/* Colonne droite : Face Login + OAuth */}

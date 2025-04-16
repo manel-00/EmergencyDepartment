@@ -8,9 +8,52 @@ import { Room, RoomFormData } from "./types";
 import Link from "next/link";
 import Breadcrumb from "@/components/Breadcrumbs/Breadcrumb";
 
+import { FileDown } from 'lucide-react';
+import { useRouter } from 'next/navigation'; // Corrected import
+
 
 
 const API_URL = "http://localhost:3000/room"; 
+
+// Reusable component for the export button
+const ExportRoomsButton = () => {
+  const handleExport = async () => {
+    try {
+      const response = await fetch('http://localhost:3000/room/export', {
+        method: 'GET',
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch CSV');
+      }
+
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'rooms.csv';
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+
+      window.URL.revokeObjectURL(url); // Clean up
+    } catch (error) {
+      console.error('Error exporting CSV:', error);
+      alert('Failed to download CSV. Please check the console.');
+    }
+  };
+
+  return (
+    <button
+      onClick={handleExport}
+      className="bg-green-700 hover:bg-green-500 text-white font-bold py-2 px-4 rounded flex items-center gap-2"
+    >
+      <FileDown className="w-4 h-4" />
+      Export Rooms to CSV
+    </button>
+  );
+};
 
 
 
@@ -231,6 +274,11 @@ function App() {
 Add Room
       </button>
 </Link>
+
+
+<div className="flex justify-end mb-4">
+  <ExportRoomsButton />
+</div>
 
 
        {/* Table for All Rooms */}

@@ -14,7 +14,6 @@ const Header = () => {
   const [sticky, setSticky] = useState(false);
   const [user, setUser] = useState(null);
   const router = useRouter();
-  const usePathName = usePathname();
 
   // Handle Sticky Navbar on Scroll
   useEffect(() => {
@@ -68,10 +67,7 @@ const Header = () => {
         });
   
         const user = response.data.user;
-        if (user?.role === "admin") {
-          alert("⛔ Accès interdit pour les administrateurs sur cette interface.");
-          window.location.href = "http://localhost:3002";
-        }
+       
       } catch (error: any) {
         if (error.response?.status !== 401) {
           // Only show non-401 errors
@@ -113,23 +109,40 @@ const Header = () => {
     };
   }, []);
 
-  // Logout Handler
   const handleLogout = async () => {
-    try {
-      await axios.get("http://localhost:3000/user/logout", { withCredentials: true });
-      localStorage.removeItem("token");
-      setUser(null);
-      router.push("/signin");
-    } catch (error) {
-      console.error("❌ Logout Failed:", error);
-    }
-  };
+  try {
+    // Request to logout on the backend to clear session on the server
+    await axios.get("http://localhost:3000/user/logout", { withCredentials: true });
+
+    // Force clear the cookies related to the token from both ports
+    document.cookie = "token_3001=; path=/; domain=localhost; expires=Thu, 01 Jan 1970 00:00:00 GMT";
+    document.cookie = "token_3002=; path=/; domain=localhost; expires=Thu, 01 Jan 1970 00:00:00 GMT";
+    document.cookie = "connect.sid=; path=/; domain=localhost; expires=Thu, 01 Jan 1970 00:00:00 GMT"; // Clear session cookie if needed
+
+    // Remove token from localStorage if it exists
+    localStorage.removeItem("token");
+
+    // Optionally, clear sessionStorage if token is stored there as well
+    sessionStorage.removeItem("token");
+
+    // Reset user state to reflect logout
+    setUser(null);
+
+    // Redirect user to signin page
+    router.push("/signin");
+  } catch (error) {
+    console.error("❌ Logout Failed:", error);
+  }
+};
+
   
 
   // Handle Profile Image Click (Redirect to Edit Profile)
   const handleProfileClick = () => {
     router.push("/edit-profile");
   };
+
+  const usePathName = usePathname();
 
   return (
     <header
@@ -183,7 +196,7 @@ const Header = () => {
 
             {/* Profile & Logout Section */}
             <div className="flex items-center gap-4">
-              {user ? (
+            {user && user.role !== "admin" ? (
                 <>
                   {/* ✅ Profile Avatar (Click to Edit Profile) */}
                   <div className="relative cursor-pointer" onClick={handleProfileClick}>
@@ -196,7 +209,7 @@ const Header = () => {
                     />
                   </div>
 
-                  <div>{user.name} </div>
+                  
 
                   {/* ✅ Logout Button */}
                   <button

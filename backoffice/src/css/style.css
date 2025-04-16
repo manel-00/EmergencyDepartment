@@ -19,6 +19,10 @@
     scrollbar-width: none; /* Firefox */
   }
 
+  nextjs-portal {
+    display: none;
+  }
+
    .custom-scrollbar {
     @apply overflow-auto;
   }

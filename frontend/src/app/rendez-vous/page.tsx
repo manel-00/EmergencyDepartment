@@ -78,7 +78,7 @@ export default function RendezVousPage() {
 
     // Autoriser l'accès si l'utilisateur est soit le médecin soit le patient
     if (isMedecin || isPatient) {
-      const consultationUrl = new URL('http://localhost:3002/test-video');
+      const consultationUrl = new URL('http://localhost:3001/test-video');
       
       // Paramètres de base
       consultationUrl.searchParams.append('consultation', rdv._id);

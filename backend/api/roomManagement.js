@@ -5,6 +5,67 @@ const User = require('../models/User');
 
 const router = express.Router();
 
+const { Parser } = require('json2csv');
+
+// GET /api/beds/export - Export all beds as CSV
+router.get('/export', async (req, res) => {
+  try {
+    // Fetch all beds and populate the room field
+    const beds = await Bed.find()
+      .populate({
+        path: 'room',  // Populate room field in the bed
+        select: 'number state floor ward'  // Select necessary room fields
+      });
+
+    // Map the data to the CSV format
+    const formattedData = beds.map(bed => ({
+      'Room Number': bed.room?.number || 'N/A', // Fallback to 'N/A' if no room
+      'Bed Number': bed.number,
+      'Bed State': bed.state === 'available' ? 'Available' : 'Occupied', // Consistent casing
+    }));
+
+    const fields = ['Room Number', 'Bed Number', 'Bed State'];
+    const json2csvParser = new Parser({ fields });
+    const csv = json2csvParser.parse(formattedData);
+
+    // Function to add ANSI escape codes for color
+    const colorizeBedState = (csvData) => {
+      return csvData.split('\n').map((row, index) => {
+        if (index === 0) return row; // Skip header row
+        const columns = row.split(',');
+        const bedStateIndex = fields.indexOf('Bed State');
+        if (bedStateIndex !== -1) {
+          const bedState = columns[bedStateIndex].trim();
+          if (bedState === 'Available') {
+            columns[bedStateIndex] = `\x1b[32m${bedState}\x1b[0m`; // Green for available
+          } else if (bedState === 'Occupied') {
+            columns[bedStateIndex] = `\x1b[31m${bedState}\x1b[0m`; // Red for occupied
+          }
+          return columns.join(',');
+        }
+        return row;
+      }).join('\n');
+    };
+
+    const coloredCsv = colorizeBedState(csv);
+
+    // Set headers to indicate it's a CSV file
+    res.header('Content-Type', 'text/csv');
+    res.attachment('beds.csv');
+    res.send(coloredCsv);
+  } catch (error) {
+    console.error('Error generating CSV:', error);
+    res.status(500).json({ error: 'Failed to generate CSV file.' });
+  }
+});
+
+
+
+
+
+
+
+
 // GET /api/beds/count/total - Returns the total count of beds
 router.get('/countbeds', async (req, res) => {
   try {

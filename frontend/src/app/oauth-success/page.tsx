@@ -14,7 +14,7 @@ export default function OAuthSuccessPage() {
       alert("✅ Connexion réussie via OAuth !");
       router.push("/"); // ou dashboard
     } else {
-      alert("❌ Erreur OAuth");
+      // alert("❌ Erreur OAuth");
       router.push("/signin");
     }
   }, [params, router]);

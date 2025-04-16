@@ -84,7 +84,7 @@ export default function AddSpeciality() {
       if (!res.ok) throw new Error(isEditing ? "Erreur lors de la mise à jour" : "Erreur lors de l'ajout");
 
       // Rediriger vers la page d'affichage
-      router.push("/view-specialities");
+      router.push("/specialities");
     } catch (err) {
       setError((err as Error).message);
     }

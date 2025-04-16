@@ -15,6 +15,9 @@ import {
 import { Pencil,Trash2,CheckCircle, AlertCircle  } from "lucide-react";
 import { FourCircle } from "./icons";
 
+import * as Icons from "./icons";
+
+
 export const NAV_DATA = [
   {
     label: "Menu Principal",
@@ -24,6 +27,10 @@ export const NAV_DATA = [
         icon: HomeIcon,
         items: [],
       },
+
+
+
+      
 
 
       {
@@ -42,7 +49,7 @@ export const NAV_DATA = [
 
 
 
-      {
+    /*  {
         title: "Téléconsultation",
         icon: VideoCameraIcon,
         items: [
@@ -59,36 +66,57 @@ export const NAV_DATA = [
             url: "/paiements",
           },
         ],
-      },
+      },*/
+
+
+     
+    
+     
+
+
       {
-        title: "Utilisateurs",
-        icon: UsersIcon,
+        title: "doctors",
+        icon: Icons.User,
         items: [
           {
-            title: "Médecins",
-            url: "/medecins",
+            title: "List doctors",
+            url: "/doctors",
           },
           {
-            title: "Patients",
-            url: "/patients",
+            title: "add doctor",
+            url: "/add-doctor",
           },
         ],
       },
+
       {
-        title: "Spécialités",
-        icon: ClipboardDocumentListIcon,
+        title: "Specialities",
+        icon: Icons.Table,
+        items: [
+          {
+            title: "list specialities",
+            url: "/specialities",
+          },
+          {
+            title: "add speciality",
+            url: "/add-speciality",
+          },
+        ],
+      },
+
+
+      {
+        title: "Patients",
+        url: "/patients",
+        icon: Icons.User,
         items: [],
       },
-      {
-        title: "Statistiques",
-        icon: ChartBarIcon,
-        items: [],
-      },
-      {
-        title: "Paramètres",
-        icon: Cog6ToothIcon,
-        items: [],
-      },
+
+
+
+
+
+
     ],
   },
 ]; 

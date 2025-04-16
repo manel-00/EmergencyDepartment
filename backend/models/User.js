@@ -13,7 +13,7 @@ const userSchema = new mongoose.Schema({
     image: { type: String, default: null },  
     googleId: { type: String, unique: true, sparse: true },  
     facebookId: { type: String, unique: true, sparse: true },  
-    faceToken: { type: String, unique: true, sparse: true },  // Face++ face ID
+    faceToken: { type: String, unique: true, sparse: true },  
 });
 
 // Create User Model

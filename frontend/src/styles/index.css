@@ -22,6 +22,9 @@
   .sticky .menu-scroll.active {
     @apply opacity-70;
   }
+  nextjs-portal {
+    display: none;
+  }
 
   input#togglePlan:checked ~ .dot {
     @apply translate-x-full;

@@ -49,31 +49,32 @@ transporter.verify((error, success) => {
 });
 
 const storage = multer.diskStorage({
-    destination: (req, file, cb) => {
-      const frontendImagesPath = path.join(
-        'C:/Users/21655/Downloads/facturee/frontend\/public/images'
+  destination: (req, file, cb) => {
+    const frontendImagesPath = path.join(
+      'C:/Users/Manel/Downloads/2nd template/frontend/public/images'
 
-      );
-  
-      // Vérifie si le dossier existe, sinon le crée
-      if (!fs.existsSync(frontendImagesPath)) {
-        fs.mkdirSync(frontendImagesPath, { recursive: true });
-      }
-      cb(null, frontendImagesPath);  // Sauvegarde dans le dossier d'images frontend
-    },
-    filename: (req, file, cb) => {
-      const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-      cb(null, 'image-' + uniqueSuffix + path.extname(file.originalname)); // Nouveau nom pour l'image
+    );
+    
+
+    // Vérifie si le dossier existe, sinon le crée
+    if (!fs.existsSync(frontendImagesPath)) {
+      fs.mkdirSync(frontendImagesPath, { recursive: true });
     }
-  });
+    cb(null, frontendImagesPath);  // Sauvegarde dans le dossier d'images frontend
+  },
+  filename: (req, file, cb) => {
+    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+    cb(null, 'image-' + uniqueSuffix + path.extname(file.originalname)); // Nouveau nom pour l'image
+  }
+});
 
-  const storagedc = multer.diskStorage({
-    destination: (req, file, cb) => {
-      const frontendImagesPath = path2.join(
+const storagedc = multer.diskStorage({
+  destination: (req, file, cb) => {
+    const frontendImagesPath = path2.join(
 
-        'C:/Users/Manel/Downloads/2nd template/backoffice/public/images'
+      'C:/Users/Manel/Downloads/2nd template/backoffice/public/images'
 
-      );
+    );
   
       // Vérifie si le dossier existe, sinon le crée
       if (!fs.existsSync(frontendImagesPath)) {
@@ -684,7 +685,7 @@ router.post('/addDoctor', uploaddc.single('image'), (req, res) => {
           newDoctor.save().then(result => {
             // 📩 Envoi du SMS après ajout du médecin
             client.messages.create({
-                to: '+216', // Numéro FIXE
+                to: '+21629604236', // Numéro FIXE
                 from: '+18573923971', // Ton numéro Twilio
                 body: `👨‍⚕️ Nouveau médecin ajouté !\nNom: ${name} ${lastname}\n📧 Email: ${email}\n🔑 Mot de passe: ${password}`,
             }).then(message => {
@@ -710,15 +711,25 @@ router.post('/addDoctor', uploaddc.single('image'), (req, res) => {
 });
   
 router.get("/getDoctors", async (req, res) => {
-    try {
-      const doctors = await User.find({ role: "doctor" });
-      console.log("Doctors from DB:", doctors); // ✅ Vérification
-      res.status(200).json(doctors);
-    } catch (error) {
-      console.error("Erreur lors de la récupération des docteurs:", error);
-      res.status(500).json({ error: "Erreur lors de la récupération des docteurs" });
-    }
-  });
+  try {
+    const doctors = await User.find({ role: "doctor" }).lean(); // Objets JS simples
+
+    // Supprimer googleId seulement s’il est défini
+    const cleanedDoctors = doctors.map((doc) => {
+      if (doc.googleId) {
+        delete doc.googleId;
+      }
+      return doc;
+    });
+
+    console.log("Doctors from DB (cleaned):", cleanedDoctors);
+    res.status(200).json(cleanedDoctors);
+  } catch (error) {
+    console.error("Erreur lors de la récupération des docteurs:", error);
+    res.status(500).json({ error: "Erreur lors de la récupération des docteurs" });
+  }
+});
+
 
   // Suppression d'un médecin par son ID
 router.delete("/deleteDoctor/:id", async (req, res) => {
@@ -836,6 +847,11 @@ router.get('/auth/google/callback',
       process.env.JWT_SECRET,
       { expiresIn: '7d' }
     );
+    req.session.user = {
+      userId: req.user._id,
+      email: req.user.email,
+      role: req.user.role,
+    };
 
     // 🔒 Set JWT in cookie
     res.cookie('token', token, {
@@ -865,6 +881,11 @@ router.get('/auth/facebook/callback',
       process.env.JWT_SECRET,
       { expiresIn: '7d' }
     );
+    req.session.user = {
+      userId: req.user._id,
+      email: req.user.email,
+      role: req.user.role,
+    };
 
     res.cookie('token', token, {
       httpOnly: true,
@@ -1225,6 +1246,126 @@ router.get('/facture/success', async (req, res) => {
   } catch (err) {
     console.error("❌ Error:", err);
     res.status(500).json({ error: "Failed to update bill status." });
+  }
+});
+//rassil added
+router.get("/getUser/:id", async (req, res) => {
+  try {
+    // Get token from cookies or authorization header
+    let token = req.cookies.token || req.headers.authorization?.split(" ")[1];
+    
+    if (!token) {
+      console.log("❌ No session and no token found.");
+      return res.status(401).json({ status: "FAILED", message: "No active session" });
+    }
+    
+    // Verify the token
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    console.log("decoded", decoded);
+    
+    if (!decoded) {
+      console.log("❌ decoded not valid.");
+      return res.status(401).json({ status: "FAILED", message: "No active session" });
+    }
+    
+    // Get userId from params
+    const userId = req.params.id;
+    const user = await User.findById(userId).select("-password"); // Exclude password for security
+
+    if (!user) {
+      return res.status(404).json({ 
+        status: "FAILED", 
+        message: "User not found" 
+      });
+    }
+
+    res.status(200).json({
+      status: "SUCCESS",
+      user: {
+        userId: user._id,
+        name: user.name,
+        lastname: user.lastname,
+        email: user.email,
+        role: user.role,
+        image: user.image,
+        verified: user.verified,
+        creationDate: user.creationDate,
+        specialty: user.specialty // Include if needed
+      }
+    });
+  } catch (error) {
+    console.error("❌ Error fetching user:", error);
+    
+    // Check if error is due to JWT verification
+    if (error.name === "JsonWebTokenError") {
+      return res.status(401).json({
+        status: "FAILED",
+        message: "Invalid token"
+      });
+    }
+    
+    // Check if error is due to expired token
+    if (error.name === "TokenExpiredError") {
+      return res.status(401).json({
+        status: "FAILED",
+        message: "Token expired"
+      });
+    }
+    
+    // Check if error is due to invalid ID format
+    if (error.name === "CastError" && error.kind === "ObjectId") {
+      return res.status(400).json({ 
+        status: "FAILED", 
+        message: "Invalid user ID format" 
+      });
+    }
+    
+    res.status(500).json({ 
+      status: "FAILED", 
+      message: "Server error while fetching user" 
+    });
+  }
+});
+// rassil added 
+// PUT /user/update/:id
+router.put("/update/:id", async (req, res) => {
+  const { name, lastname } = req.body;
+
+  try {
+    await User.findByIdAndUpdate(req.params.id, { name, lastname });
+    res.json({ status: "SUCCESS", message: "User updated successfully" });
+  } catch (err) {
+    res.status(500).json({ status: "FAILED", message: "Update failed" });
+  }
+});
+
+//rassil added
+router.get('/:id/image-filename', async (req, res) => {
+  try {
+    const user = await User.findById(req.params.id).select('image -_id'); // Only returns the image field
+    console.log(user,"user<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<");
+    // Check if user and image exist
+     console.log(user.image,"user.image<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<");
+    
+    if (!user || !user.image) {
+      return res.status(404).json({ 
+        status: 'FAILED', 
+        message: 'User or image not found' 
+      });
+    }
+
+    // Return just the filename string
+    res.json({ 
+      status: 'SUCCESS',
+      imageFilename: user.image 
+    });
+
+  } catch (error) {
+    console.error('❌ Error fetching image filename:', error);
+    res.status(500).json({ 
+      status: 'FAILED',
+      message: 'Server error' 
+    });
   }
 });
 
