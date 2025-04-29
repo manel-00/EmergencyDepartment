@@ -11,6 +11,8 @@ const MongoStore = require("connect-mongo");
 require('dotenv').config();
 const mongoose = require('mongoose');
 const http = require('http');
+const fs = require('fs');
+const path = require('path');
 // ✅ Initialize Express app
 const app = express();
 const port = 3000;
@@ -103,6 +105,34 @@ io.on('connection', (socket) => {
     console.log('User disconnected:', socket.id);
   });
 });
+
+app.post('/api/analyze-symptoms', (req, res) => {
+  const { symptoms } = req.body;
+  if (!symptoms) {
+    return res.status(400).json({ error: 'symptoms is required' });
+  }
+
+  // Make sure this path matches your folder structure!
+  const intentsPath = path.join(__dirname, 'data', 'intents.json');
+  if (!fs.existsSync(intentsPath)) {
+    return res.status(500).json({ error: 'intents.json file not found' });
+  }
+
+  const intents = JSON.parse(fs.readFileSync(intentsPath, 'utf8'));
+  const responses = [];
+
+  for (const intent of intents.intents) {
+    for (const pattern of intent.patterns) {
+      if (symptoms.toLowerCase().includes(pattern.toLowerCase())) {
+        responses.push(intent.responses[0]);
+        break;
+      }
+    }
+  }
+
+  res.json({ responses });
+});
+
 // ✅ Start server
 app.listen(port, () => {
   console.log(`✅ Server is running on port ${port}`);
