@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import Breadcrumb from "@/components/Common/Breadcrumb";
+import Image from 'next/image';
 
 interface Question {
   id: number;
@@ -186,6 +187,28 @@ const DiagnosisPage = () => {
   const [identifiedSymptoms, setIdentifiedSymptoms] = useState<Set<string>>(new Set());
   const [quizCompleted, setQuizCompleted] = useState(false);
   const [selectedAnswers, setSelectedAnswers] = useState<{ [key: number]: string[] }>({});
+  const [apiResponse, setApiResponse] = useState<any>(null);
+
+  const sendSymptomsToBackend = async (symptoms: string[]) => {
+    try {
+      const response = await fetch('http://localhost:3000/api/analyze-symptoms', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ symptoms: symptoms.join(', ') }),
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to analyze symptoms');
+      }
+      
+      const data = await response.json();
+      setApiResponse(data);
+    } catch (error) {
+      console.error('Error sending symptoms to backend:', error);
+    }
+  };
 
   const handleOptionSelect = (option: string) => {
     const currentQuestion = questions[currentQuestionIndex];
@@ -222,7 +245,10 @@ const DiagnosisPage = () => {
       setCurrentQuestionIndex(currentQuestionIndex + 1);
     } else {
       setQuizCompleted(true);
-      console.log('Identified Symptoms:', Array.from(newSymptoms));
+      const symptomsArray = Array.from(newSymptoms);
+      console.log('Identified Symptoms:', symptomsArray);
+      // Send symptoms to backend when quiz is completed
+      sendSymptomsToBackend(symptomsArray);
     }
   };
 
@@ -231,100 +257,129 @@ const DiagnosisPage = () => {
   return (
     <>
       <Breadcrumb
-        pageName="Symptom Assessment Quiz"
+        pageName="Symptom Assessment For First Aid"
         description="Answer these questions to help us identify your symptoms"
       />
       <div className="container mx-auto px-4 py-8">
-        <div className="bg-white rounded-lg shadow-md p-6">
-          {!quizCompleted ? (
-            <div className="space-y-6">
-              {/* Progress Bar */}
-              <div className="w-full bg-gray-200 rounded-full h-2.5">
-                <div 
-                  className="bg-blue-600 h-2.5 rounded-full"
-                  style={{ width: `${((currentQuestionIndex + 1) / questions.length) * 100}%` }}
-                ></div>
-              </div>
-              
-              <div className="mb-6">
-                <h2 className="text-xl font-semibold mb-2">
-                  Question {currentQuestionIndex + 1} of {questions.length}
-                </h2>
-                <p className="text-sm text-gray-500 mb-4">{currentQuestion.context}</p>
-                <p className="text-lg mb-4">{currentQuestion.text}</p>
-                
-                <div className="space-y-2">
-                  {currentQuestion.options?.map((option) => (
-                    <button
-                      key={option}
-                      onClick={() => handleOptionSelect(option)}
-                      className={`w-full p-3 text-left border rounded-md hover:bg-gray-50 
-                        flex items-center justify-between
-                        ${selectedAnswers[currentQuestion.id]?.includes(option)
-                          ? 'bg-blue-50 border-blue-500'
-                          : 'hover:border-gray-400'
-                        }`}
-                    >
-                      <span>{option}</span>
-                      {selectedAnswers[currentQuestion.id]?.includes(option) && (
-                        <svg className="w-5 h-5 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                        </svg>
-                      )}
-                    </button>
-                  ))}
-                </div>
+        <div className="flex flex-col md:flex-row gap-8">
+          {/* Quiz Section */}
+          <div className="w-full md:w-2/3">
+            <div className="bg-white rounded-lg shadow-md p-6">
+              {!quizCompleted ? (
+                <div className="space-y-6">
+                  {/* Progress Bar */}
+                  <div className="w-full bg-gray-200 rounded-full h-2.5">
+                    <div 
+                      className="bg-blue-600 h-2.5 rounded-full"
+                      style={{ width: `${((currentQuestionIndex + 1) / questions.length) * 100}%` }}
+                    ></div>
+                  </div>
+                  
+                  <div className="mb-6">
+                    <h2 className="text-xl font-semibold mb-2">
+                      Question {currentQuestionIndex + 1} of {questions.length}
+                    </h2>
+                    <p className="text-sm text-gray-500 mb-4">{currentQuestion.context}</p>
+                    <p className="text-lg mb-4">{currentQuestion.text}</p>
+                    
+                    <div className="space-y-2">
+                      {currentQuestion.options?.map((option) => (
+                        <button
+                          key={option}
+                          onClick={() => handleOptionSelect(option)}
+                          className={`w-full p-3 text-left border rounded-md hover:bg-gray-50 
+                            flex items-center justify-between
+                            ${selectedAnswers[currentQuestion.id]?.includes(option)
+                              ? 'bg-blue-50 border-blue-500'
+                              : 'hover:border-gray-400'
+                            }`}
+                        >
+                          <span>{option}</span>
+                          {selectedAnswers[currentQuestion.id]?.includes(option) && (
+                            <svg className="w-5 h-5 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                            </svg>
+                          )}
+                        </button>
+                      ))}
+                    </div>
 
-                {/* Navigation Buttons */}
-                <div className="mt-6 flex justify-between">
-                  {currentQuestionIndex > 0 && (
-                    <button
-                      onClick={() => setCurrentQuestionIndex(currentQuestionIndex - 1)}
-                      className="px-4 py-2 text-blue-600 hover:bg-blue-50 rounded-md"
-                    >
-                      Previous
-                    </button>
+                    {/* Navigation Buttons */}
+                    <div className="mt-6 flex justify-between">
+                      {currentQuestionIndex > 0 && (
+                        <button
+                          onClick={() => setCurrentQuestionIndex(currentQuestionIndex - 1)}
+                          className="px-4 py-2 text-blue-600 hover:bg-blue-50 rounded-md"
+                        >
+                          Previous
+                        </button>
+                      )}
+                      <button
+                        onClick={() => handleOptionSelect('None')}
+                        className="px-4 py-2 text-blue-600 hover:bg-blue-50 rounded-md ml-auto"
+                      >
+                        Skip
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <div className="space-y-6">
+                  <h2 className="text-2xl font-semibold mb-4">Assessment Complete</h2>
+                  
+                
+
+                  {apiResponse && (
+                    <div className="space-y-4 mt-6">
+                      <h3 className="text-lg font-medium">Analysis Results:</h3>
+                      <div className="grid grid-cols-1 gap-3">
+                        {apiResponse.responses.map((response: string, index: number) => (
+                          <div 
+                            key={index} 
+                            className="flex items-start gap-4 p-4 rounded-lg bg-blue-50 border border-blue-100"
+                          >
+                            <div className="flex-shrink-0 w-8 h-8 rounded-full bg-blue-500 text-white flex items-center justify-center font-semibold">
+                              {index + 1}
+                            </div>
+                            <p className="text-gray-800 flex-1">{response}</p>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
                   )}
+
                   <button
-                    onClick={() => handleOptionSelect('None')}
-                    className="px-4 py-2 text-blue-600 hover:bg-blue-50 rounded-md ml-auto"
+                    onClick={() => {
+                      setCurrentQuestionIndex(0);
+                      setIdentifiedSymptoms(new Set());
+                      setSelectedAnswers({});
+                      setQuizCompleted(false);
+                      setApiResponse(null);
+                    }}
+                    className="w-full bg-blue-500 text-white p-3 rounded-md hover:bg-blue-600"
                   >
-                    Skip
+                    Start New Assessment
                   </button>
                 </div>
-              </div>
+              )}
             </div>
-          ) : (
-            <div className="space-y-6">
-              <h2 className="text-2xl font-semibold mb-4">Assessment Complete</h2>
-              
-              <div className="space-y-4">
-                <h3 className="text-lg font-medium">Identified Symptoms:</h3>
-                <div className="flex flex-wrap gap-2">
-                  {Array.from(identifiedSymptoms).map((symptom, index) => (
-                    <span 
-                      key={index}
-                      className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full"
-                    >
-                      {symptom}
-                    </span>
-                  ))}
-                </div>
-              </div>
+          </div>
 
-              <button
-                onClick={() => {
-                  setCurrentQuestionIndex(0);
-                  setIdentifiedSymptoms(new Set());
-                  setSelectedAnswers({});
-                  setQuizCompleted(false);
-                }}
-                className="w-full bg-blue-500 text-white p-3 rounded-md hover:bg-blue-600"
-              >
-                Start New Assessment
-              </button>
+          {/* First Aid Kit Image */}
+          <div className="w-full md:w-1/3">
+            <div className="sticky top-8">
+              <div className="relative w-full h-[500px]">
+                <Image
+                  src="/firstaidkit.PNG"
+                  alt="First Aid Kit"
+                  fill
+                  style={{ objectFit: 'contain' }}
+                  className="rounded-lg shadow-lg"
+                  priority
+                />
+              </div>
             </div>
-          )}
+          </div>
         </div>
       </div>
     </>
