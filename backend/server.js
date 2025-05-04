@@ -8,6 +8,7 @@ const passport = require('passport');
 const cors = require("cors");
 const cookieParser = require("cookie-parser");
 const MongoStore = require("connect-mongo");
+const axios = require('axios');
 require('dotenv').config();
 const mongoose = require('mongoose');
 const http = require('http');
@@ -19,6 +20,7 @@ const port = 3000;
 const socketIo = require('socket.io');
 const consultationRouter = require('./api/routes/consultationRoutes');
 const rendezVousRouter = require('./api/routes/rendezVousRoutes');
+const mortalityRouter = require('./routes/mortality');
 
 // ✅ Import routes
 const UserRouter = require('./api/User');
@@ -77,6 +79,7 @@ app.use('/makeappointment', makeappointmentRouter);
 app.use('/api/consultations', consultationRouter);
 app.use('/api/paiements', paiementRouter);
 app.use('/api/rendez-vous', rendezVousRouter);
+app.use('/api/mortality', mortalityRouter);
 
 io.on('connection', (socket) => {
   console.log('User connected:', socket.id);
@@ -104,6 +107,70 @@ io.on('connection', (socket) => {
   socket.on('disconnect', () => {
     console.log('User disconnected:', socket.id);
   });
+});
+
+// POST endpoint to interact with the Python model
+app.post('/api/predict', async (req, res) => {
+  try {
+    const patientData = req.body;
+    console.log('Received patient data:', patientData);
+
+    // Validate required fields
+    const requiredFields = ['Disease', 'Fever', 'Cough', 'Fatigue', 'Difficulty Breathing', 
+                          'Age', 'Gender', 'Blood Pressure', 'Cholesterol Level'];
+    
+    const missingFields = requiredFields.filter(field => !patientData[field]);
+    if (missingFields.length > 0) {
+      return res.status(400).json({
+        error: 'Missing required fields',
+        missing_fields: missingFields
+      });
+    }
+
+    // Validate data types
+    if (typeof patientData.Age !== 'number') {
+      return res.status(400).json({
+        error: 'Age must be a number'
+      });
+    }
+
+    // Validate categorical fields
+    const validValues = {
+      'Fever': ['Yes', 'No'],
+      'Cough': ['Yes', 'No'],
+      'Fatigue': ['Yes', 'No'],
+      'Difficulty Breathing': ['Yes', 'No'],
+      'Gender': ['Male', 'Female'],
+      'Blood Pressure': ['Low', 'Normal', 'High'],
+      'Cholesterol Level': ['Low', 'Normal', 'High']
+    };
+
+    for (const [field, validOptions] of Object.entries(validValues)) {
+      if (!validOptions.includes(patientData[field])) {
+        return res.status(400).json({
+          error: `Invalid value for ${field}. Must be one of: ${validOptions.join(', ')}`
+        });
+      }
+    }
+
+    console.log('Sending request to Flask server...');
+    const response = await axios.post('http://localhost:5000/predict', patientData, {
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    });
+    console.log('Received response from Flask server:', response.data);
+
+    res.json({
+      mortality_chance: response.data.mortality_chance
+    });
+  } catch (error) {
+    console.error('Error in prediction:', error.response ? error.response.data : error.message);
+    res.status(500).json({ 
+      error: 'Something went wrong with the prediction', 
+      details: error.response ? error.response.data : error.message 
+    });
+  }
 });
 
 app.post('/api/analyze-symptoms', (req, res) => {
