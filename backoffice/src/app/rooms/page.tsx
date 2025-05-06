@@ -271,7 +271,7 @@ function App() {
 </div>
 <Link href="/rooms/addroom">
 <button className="bg-[#008B8B] text-white font-bold uppercase px-4 py-2  shadow hover:bg-[#006A6A]">
-Add Room xd
+Add Room 
       </button>
 </Link>
 
