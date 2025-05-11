@@ -1,0 +1,213 @@
+// ✅ MongoDB connection
+require('./config/db');
+
+// ✅ Required modules
+const express = require('express');
+const session = require('express-session');
+const passport = require('passport');
+const cors = require("cors");
+const cookieParser = require("cookie-parser");
+const MongoStore = require("connect-mongo");
+require('dotenv').config();
+const mongoose = require('mongoose');
+const http = require('http');
+// ✅ Initialize Express app
+const app = express();
+const port = 3000;
+const socketIo = require('socket.io');
+const consultationRouter = require('./api/routes/consultationRoutes');
+const rendezVousRouter = require('./api/routes/rendezVousRoutes');
+const statisticsRouter = require('./api/routes/statisticsRoutes');
+const chatMessageRouter = require('./api/routes/chatMessageRoutes');
+
+// ✅ Import routes
+const UserRouter = require('./api/User');
+const RoomRouter = require('./api/roomManagement');
+const DocumentRouter = require('./api/Document');
+const chatRouter = require('./api/chat');
+const makeappointmentRouter = require('./api/makeappointment');
+const SpecialiteRouter = require('./api/Specialite');
+const paiementRouter = require('./api/routes/paiementRoutes');
+const googleCalendarRouter = require('./api/routes/googleCalendarRoutes');
+app.use(cors({
+  origin: ["http://localhost:5173", "http://localhost:3001", "http://localhost:3002"],
+  credentials: true
+}));
+const server = http.createServer(app);
+const io = socketIo(server, {
+  cors: {
+    origin: ["http://localhost:3000", "http://localhost:3001", "http://localhost:3002"],
+    methods: ["GET", "POST"]
+  }
+});
+// ✅ Middlewares
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+app.use(cookieParser());
+app.use(express.static('public')); // Servir les fichiers statiques depuis le dossier public
+
+// ✅ Configure session with memory store (for development only)
+app.use(session({
+  secret: process.env.SESSION_SECRET || 'supersecretkey',
+  resave: false,
+  saveUninitialized: true,
+  // Pas de store configuré = utilisation du stockage en mémoire par défaut
+  cookie: {
+    httpOnly: true,
+    secure: false, // Set to true in production with HTTPS
+    sameSite: "lax",
+    maxAge: 24 * 60 * 60 * 1000 // 1-day
+  }
+}));
+
+// ✅ Test route for session
+app.get("/test-session", (req, res) => {
+  req.session.test = "Session is working!";
+  res.json({ message: "Session saved!", session: req.session });
+});
+
+// ✅ Routes
+app.use('/user', UserRouter);
+app.use('/room', RoomRouter);
+app.use('/specialite', SpecialiteRouter);
+app.use('/document', DocumentRouter);
+app.use('/chat', chatRouter);
+app.use('/makeappointment', makeappointmentRouter);
+app.use('/api/consultations', consultationRouter);
+app.use('/api/paiements', paiementRouter);
+app.use('/api/rendez-vous', rendezVousRouter);
+app.use('/api/google-calendar', googleCalendarRouter);
+app.use('/api/statistics', statisticsRouter);
+app.use('/api/chat-messages', chatMessageRouter);
+
+// Route spéciale pour le callback Google Calendar
+// Cette route doit être définie AVANT les autres routes pour éviter le middleware d'authentification
+const googleCalendarController = require('./api/controllers/googleCalendarController');
+app.get('/auth/google/callback', googleCalendarController.handleCallback);
+
+io.on('connection', (socket) => {
+  console.log('User connected:', socket.id);
+
+  // Join a consultation room
+  socket.on('join-room', (data) => {
+    console.log('Join room data:', data);
+    let roomId, userId, role;
+
+    // Handle both object format and separate parameters
+    if (typeof data === 'object' && data !== null) {
+      roomId = data.consultationId;
+      userId = data.userId;
+      role = data.role;
+    } else {
+      roomId = data;
+      userId = arguments[1];
+    }
+
+    if (!roomId) {
+      console.error('No room ID provided');
+      return;
+    }
+
+    console.log(`User ${userId} joining room ${roomId} as ${role || 'unknown role'}`);
+    socket.join(roomId);
+    socket.to(roomId).emit('user-connected', { userId, role });
+  });
+
+  // Join a chat room
+  socket.on('join-chat-room', (roomId) => {
+    console.log(`Socket ${socket.id} joining chat room: ${roomId}`);
+    socket.join(`chat-${roomId}`);
+    // Notify others that someone joined the chat
+    socket.to(`chat-${roomId}`).emit('chat-user-joined', {
+      socketId: socket.id,
+      timestamp: Date.now()
+    });
+  });
+
+  // Handle chat messages
+  socket.on('chat-message', (data) => {
+    const { consultationId, message } = data;
+    console.log(`Chat message in room ${consultationId}:`, message);
+
+    // Ajouter des informations supplémentaires au message si nécessaire
+    const enhancedMessage = {
+      ...message,
+      receivedAt: new Date()
+    };
+
+    // Broadcast the message to everyone in the room except the sender
+    socket.to(`chat-${consultationId}`).emit('chat-message', enhancedMessage);
+
+    // Enregistrer le message dans la base de données (optionnel, car déjà géré côté client)
+    // Cela pourrait être utile si on veut s'assurer que tous les messages sont enregistrés
+    // même en cas d'échec de la requête HTTP côté client
+
+    // Envoyer une confirmation au client qui a envoyé le message
+    socket.emit('chat-message-sent', {
+      success: true,
+      messageId: message._id || null,
+      timestamp: new Date()
+    });
+  });
+
+  // Handle WebRTC signaling
+  socket.on('offer', (offer, roomId, userId) => {
+    console.log(`Received offer from ${userId || 'unknown'} for room ${roomId || 'unknown'}`);
+    if (roomId) {
+      socket.to(roomId).emit('offer', offer, userId);
+    } else if (offer && offer.consultationId) {
+      // Handle case where offer is sent as an object with consultationId
+      socket.to(offer.consultationId).emit('offer', offer);
+      console.log(`Forwarded offer to room ${offer.consultationId}`);
+    } else {
+      console.error('No room ID provided for offer');
+    }
+  });
+
+  socket.on('answer', (answer, roomId, userId) => {
+    console.log(`Received answer from ${userId || 'unknown'} for room ${roomId || 'unknown'}`);
+    if (roomId) {
+      socket.to(roomId).emit('answer', answer, userId);
+    } else if (answer && answer.consultationId) {
+      // Handle case where answer is sent as an object with consultationId
+      socket.to(answer.consultationId).emit('answer', answer);
+      console.log(`Forwarded answer to room ${answer.consultationId}`);
+    } else {
+      console.error('No room ID provided for answer');
+    }
+  });
+
+  socket.on('ice-candidate', (candidate, roomId, userId) => {
+    if (roomId) {
+      socket.to(roomId).emit('ice-candidate', candidate, userId);
+    } else if (candidate && candidate.consultationId) {
+      // Handle case where candidate is sent as an object with consultationId
+      socket.to(candidate.consultationId).emit('ice-candidate', candidate);
+    } else {
+      console.error('No room ID provided for ICE candidate');
+    }
+  });
+
+  // Handle disconnection
+  socket.on('disconnect', () => {
+    console.log('User disconnected:', socket.id);
+
+    // Get all rooms this socket was in
+    const rooms = Array.from(socket.rooms);
+
+    // Notify all rooms that this user has disconnected
+    rooms.forEach(room => {
+      if (room !== socket.id) { // Skip the default room (socket.id)
+        console.log(`Notifying room ${room} that user has disconnected`);
+        socket.to(room).emit('user-disconnected', {
+          socketId: socket.id,
+          timestamp: Date.now()
+        });
+      }
+    });
+  });
+});
+// ✅ Start server with Socket.IO
+server.listen(port, () => {
+  console.log(`✅ Server is running on port ${port}`);
+});

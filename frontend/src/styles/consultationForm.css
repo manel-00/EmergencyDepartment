@@ -1,0 +1,243 @@
+/* Consultation Form Styling */
+
+.consultation-form-container {
+  max-width: 450px;
+  width: 100%;
+  margin: 0 auto;
+  padding: 1.5rem;
+  background-color: #1e293b;
+  border-radius: 12px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #f8fafc;
+  backdrop-filter: blur(8px);
+  animation: fadeIn 0.2s ease-out forwards;
+}
+
+.consultation-form-title {
+  font-size: 1.25rem;
+  font-weight: 700;
+  margin-bottom: 1.25rem;
+  text-align: center;
+  color: #f8fafc;
+  position: relative;
+  padding-bottom: 0.5rem;
+}
+
+.consultation-form-title::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 40px;
+  height: 2px;
+  background: linear-gradient(90deg, #3b82f6, #60a5fa);
+  border-radius: 2px;
+}
+
+.form-group {
+  margin-bottom: 1rem;
+}
+
+.form-label {
+  display: block;
+  margin-bottom: 0.25rem;
+  font-weight: 600;
+  color: #e2e8f0;
+  font-size: 0.85rem;
+}
+
+.form-select,
+.form-input,
+.form-textarea {
+  width: 100%;
+  padding: 0.5rem 0.75rem;
+  border-radius: 6px;
+  background-color: #334155;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #f8fafc;
+  font-size: 0.9rem;
+  transition: all 0.2s ease;
+  appearance: none;
+}
+
+.form-select {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%23f8fafc'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.75rem center;
+  background-size: 0.8rem;
+  padding-right: 2rem;
+}
+
+.form-select:focus,
+.form-input:focus,
+.form-textarea:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.3);
+}
+
+.form-textarea {
+  min-height: 80px;
+  resize: vertical;
+}
+
+.date-time-picker {
+  position: relative;
+}
+
+.date-time-picker .form-input {
+  padding-right: 2rem;
+}
+
+.date-time-picker .calendar-icon {
+  position: absolute;
+  right: 0.75rem;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #94a3b8;
+  pointer-events: none;
+  width: 14px;
+  height: 14px;
+}
+
+.form-info {
+  font-size: 0.75rem;
+  color: #94a3b8;
+  margin-top: 0.25rem;
+}
+
+.form-error {
+  color: #f87171;
+  font-size: 0.75rem;
+  margin-top: 0.25rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.form-error svg {
+  width: 0.8rem;
+  height: 0.8rem;
+  flex-shrink: 0;
+}
+
+.form-actions {
+  display: flex;
+  gap: 0.75rem;
+  margin-top: 1.25rem;
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+  font-weight: 600;
+  font-size: 0.9rem;
+  transition: all 0.2s ease;
+  cursor: pointer;
+  border: none;
+}
+
+.btn-primary {
+  background: linear-gradient(90deg, #3b82f6, #60a5fa);
+  color: white;
+  flex: 1;
+}
+
+.btn-primary:hover {
+  background: linear-gradient(90deg, #2563eb, #3b82f6);
+  transform: translateY(-1px);
+  box-shadow: 0 3px 8px rgba(59, 130, 246, 0.3);
+}
+
+.btn-secondary {
+  background-color: #334155;
+  color: #e2e8f0;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.btn-secondary:hover {
+  background-color: #475569;
+}
+
+/* Responsive adjustments */
+@media (max-width: 640px) {
+  .consultation-form-container {
+    padding: 1.25rem;
+    border-radius: 10px;
+    max-width: 90%;
+  }
+
+  .form-actions {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .btn {
+    width: 100%;
+    padding: 0.5rem 0.75rem;
+  }
+
+  .consultation-form-title {
+    font-size: 1.1rem;
+    margin-bottom: 1rem;
+  }
+}
+
+/* Animation for form elements */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes pulse {
+  0% { box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.5); }
+  70% { box-shadow: 0 0 0 10px rgba(59, 130, 246, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(59, 130, 246, 0); }
+}
+
+.form-group {
+  animation: fadeIn 0.2s ease-out forwards;
+}
+
+.form-group:nth-child(1) { animation-delay: 0.05s; }
+.form-group:nth-child(2) { animation-delay: 0.1s; }
+.form-group:nth-child(3) { animation-delay: 0.15s; }
+.form-group:nth-child(4) { animation-delay: 0.2s; }
+
+/* Custom styling for the date picker */
+input[type="datetime-local"] {
+  color-scheme: dark;
+}
+
+/* Hover effects */
+.form-select:hover,
+.form-input:hover,
+.form-textarea:hover {
+  border-color: #4b5563;
+}
+
+.btn-primary:focus {
+  animation: pulse 1.5s infinite;
+}
+
+/* Additional styling for better visual hierarchy */
+.consultation-form-container {
+  position: relative;
+  overflow: hidden;
+}
+
+.consultation-form-container::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 5px;
+  background: linear-gradient(90deg, #3b82f6, #60a5fa, #93c5fd);
+  z-index: 1;
+}

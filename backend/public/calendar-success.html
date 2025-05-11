@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calendrier Google connecté</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background-color: #f5f5f5;
+        }
+        .container {
+            text-align: center;
+            background-color: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            max-width: 500px;
+        }
+        h1 {
+            color: #4285F4;
+        }
+        .success-icon {
+            font-size: 60px;
+            color: #34A853;
+            margin-bottom: 20px;
+        }
+        .btn {
+            display: inline-block;
+            background-color: #4285F4;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 5px;
+            text-decoration: none;
+            margin-top: 20px;
+            font-weight: bold;
+        }
+        .btn:hover {
+            background-color: #3367D6;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="success-icon">✓</div>
+        <h1>Calendrier Google connecté avec succès!</h1>
+        <p>Votre compte Google Calendar a été connecté avec succès à votre compte médecin.</p>
+        <p>Vos rendez-vous seront désormais automatiquement synchronisés avec votre calendrier Google.</p>
+        <a href="http://localhost:5173/doctor-dashboard" class="btn">Retourner au tableau de bord</a>
+    </div>
+    <script>
+        // Rediriger automatiquement après 5 secondes
+        setTimeout(function() {
+            window.location.href = 'http://localhost:5173/doctor-dashboard';
+        }, 5000);
+    </script>
+</body>
+</html>
