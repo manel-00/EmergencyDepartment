@@ -5,6 +5,12 @@ import os
 from sklearn.preprocessing import LabelEncoder
 from flask_cors import CORS  # Import CORS
 
+#forecasting imports
+import matplotlib.pyplot as plt
+from io import BytesIO
+import base64
+
+
 # Load the trained model
 model_path = os.path.join(os.getcwd(), 'backend', 'ml_service', 'mortality.pkl')
 model = joblib.load(model_path)
@@ -52,5 +58,62 @@ def predict_mortality():
     
     return jsonify({'mortality_chance': f"{prob * 100:.1f}%"})
 
+#forecasting
+@app.route('/resourceforecast', methods=['POST'])
+def forecast():
+    data = request.json
+
+    # Parse input
+    current_stock = int(data['current_stock'])
+    usage_per_hour = int(data['usage_per_hour'])
+    incoming_supply = int(data['incoming_supply'])
+    supply_arrival_time = int(data['supply_arrival_time'])
+    forecast_duration = int(data['forecast_duration'])
+    low_threshold = 10  # Critical stock level
+
+    stock_levels = []
+    times = []
+    stock = current_stock
+
+    for hour in range(forecast_duration + 1):
+        if hour == supply_arrival_time:
+            stock += incoming_supply
+        stock -= usage_per_hour
+        stock = max(stock, 0)
+        stock_levels.append(stock)
+        times.append(hour)
+        if stock == 0:
+            break
+
+    run_out_hour = next((i for i, s in enumerate(stock_levels) if s == 0), None)
+
+    # Plot graph
+    colors = ['red' if s <= low_threshold else 'blue' for s in stock_levels]
+    plt.figure(figsize=(8, 4))
+    plt.bar(times, stock_levels, color=colors)
+    plt.axhline(y=low_threshold, color='orange', linestyle='--', label='Critical Threshold')
+    plt.title("Resource Stock Forecast")
+    plt.xlabel("Hour")
+    plt.ylabel("Stock Level")
+    plt.legend()
+    plt.tight_layout()
+
+    # Convert graph to base64
+    buf = BytesIO()
+    plt.savefig(buf, format='png')
+    buf.seek(0)
+    img_base64 = base64.b64encode(buf.read()).decode('utf-8')
+    plt.close()
+
+    return jsonify({
+        'stock_levels': stock_levels,
+        'run_out_hour': run_out_hour,
+        'graph_base64': img_base64
+    })
+
+
+
 if __name__ == '__main__':
     app.run(debug=True)
+
+

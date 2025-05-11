@@ -54,6 +54,21 @@ export const NAV_DATA = [
         items: [],
       },
 
+      {
+        title: "Resources",
+        icon: FourCircle,
+        items: [
+          {
+            title: "Speech Recognition",
+            url: "/speechrec",
+          },
+          {
+            title: "demand projections",
+            url: "/resforecasting",
+          },
+        ],
+      },
+
 
 
     /*  {

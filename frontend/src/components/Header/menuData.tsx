@@ -31,6 +31,19 @@ const menuData: Menu[] = [
     path: "/teleconsultation",
     newTab: false,
   },
+
+  {
+    id: 105,
+    title: "First Aid",
+    path: "/case",
+    newTab: false,
+  },
+  {
+    id: 106,
+    title: "mortality rate",
+    path: "/mortality",
+    newTab: false,
+  },
   {
     id: 6,
     title: "Rendez-vous",

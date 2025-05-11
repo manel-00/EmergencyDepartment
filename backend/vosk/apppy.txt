@@ -1,0 +1,59 @@
+from flask import Flask, jsonify
+from flask_cors import CORS  # Import CORS for cross-origin requests
+import os
+from vosk import Model, KaldiRecognizer
+import wave
+import json
+
+app = Flask(__name__)
+
+# Enable CORS to allow requests from the Next.js app at http://localhost:3000
+CORS(app, origins=["http://localhost:3002"])
+
+@app.route('/transcribe', methods=['GET'])
+def transcribe_audio():
+    model_path = "model/vosk-model-small-en-us-0.15"  # Path to your Vosk model
+    audio_path = "your_audio3.wav"  # Path to your audio file
+
+    # Check if the model and audio file exist
+    if not os.path.exists(model_path):
+        return jsonify({'error': 'Vosk model not found'}), 500
+    if not os.path.exists(audio_path):
+        return jsonify({'error': 'Audio file not found'}), 400
+
+    # Load the Vosk model and audio file
+    model = Model(model_path)
+    wf = wave.open(audio_path, "rb")
+
+    # Check the audio format
+    if wf.getnchannels() != 1 or wf.getsampwidth() != 2 or wf.getframerate() != 16000:
+        return jsonify({'error': 'Audio must be mono, 16-bit, 16kHz WAV format.'}), 400
+
+    # Initialize the recognizer
+    rec = KaldiRecognizer(model, wf.getframerate())
+    result = ""
+
+    # Process the audio file in chunks
+    while True:
+        data = wf.readframes(4000)
+        if len(data) == 0:
+            break
+        if rec.AcceptWaveform(data):
+            res = json.loads(rec.Result())
+            result += res.get("text", "") + " "
+        else:
+            # Optionally, print partial results for debugging purposes
+            print("Partial result:", rec.PartialResult())
+
+    # Get the final result after processing all frames
+    final_result = json.loads(rec.FinalResult())
+    result += final_result.get("text", "")
+
+    # Check if there is any transcript generated
+    if result.strip():
+        return jsonify({'transcript': result.strip()})
+    else:
+        return jsonify({'error': 'No speech detected or failed to recognize speech.'}), 204
+
+if __name__ == '__main__':
+    app.run(debug=True)
