@@ -12,6 +12,7 @@ exports.createConsultation = async (req, res) => {
         res.status(400).json({ message: error.message });
     }
 };
+
 // Obtenir toutes les consultations
 exports.getAllConsultations = async (req, res) => {
     try {

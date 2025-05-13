@@ -27,44 +27,105 @@ const ChatBox = ({ socket, consultationId, userId, userName, isOpen, onClose }: 
   const [newMessage, setNewMessage] = useState('');
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
-  const [isTokenRefreshing, setIsTokenRefreshing] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
   // Fonction pour tenter de rafraîchir le token
   const refreshToken = async () => {
     try {
-      setIsTokenRefreshing(true);
       setError('Tentative de rafraîchissement de la session...');
+      console.log('Tentative de rafraîchissement du token...');
 
-      // Ici, vous devriez implémenter la logique pour rafraîchir le token
-      // Par exemple, appeler une API de rafraîchissement de token
+      // Récupérer le token actuel
+      const token = localStorage.getItem('token');
+      if (!token) {
+        throw new Error('Aucun token disponible');
+      }
 
-      // Pour l'instant, nous allons simplement simuler un délai
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      // Essayer d'abord de vérifier si la session est toujours valide
+      try {
+        console.log('Vérification de la validité de la session...');
+        const checkResponse = await fetch('http://localhost:3000/api/user/check-session', {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+        });
 
-      // Si vous avez une API de rafraîchissement, vous pourriez faire quelque chose comme:
-      // const response = await fetch('http://localhost:3000/api/refresh-token', {
-      //   method: 'POST',
-      //   headers: { 'Content-Type': 'application/json' },
-      //   body: JSON.stringify({ refreshToken: localStorage.getItem('refreshToken') })
-      // });
-      //
-      // if (response.ok) {
-      //   const data = await response.json();
-      //   localStorage.setItem('token', data.token);
-      //   return true;
-      // }
+        if (checkResponse.ok) {
+          // La session est toujours valide
+          const data = await checkResponse.json();
+          console.log('Réponse de check-session:', data);
+          if (data.status === 'SUCCESS') {
+            console.log('Session toujours valide');
+            setError('');
+            return true;
+          }
+        } else {
+          console.log('Session invalide, statut:', checkResponse.status);
+        }
+      } catch (checkError) {
+        console.error('Erreur lors de la vérification de la session:', checkError);
+        // Continuer avec le rafraîchissement du token
+      }
 
-      // Pour l'instant, nous allons simplement rediriger vers la page de connexion
-      window.location.href = '/sign-in';
-      return false;
+      // Si nous arrivons ici, essayons de rafraîchir le token
+      console.log('Tentative de rafraîchissement du token...');
+
+      // Appeler l'API de rafraîchissement du token
+      const refreshResponse = await fetch('http://localhost:3000/api/user/refresh-token', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ token })
+      });
+
+      console.log('Statut de la réponse de refresh-token:', refreshResponse.status);
+
+      if (refreshResponse.ok) {
+        const refreshData = await refreshResponse.json();
+        console.log('Réponse de refresh-token:', refreshData);
+
+        if (refreshData.status === 'SUCCESS' && refreshData.token) {
+          // Sauvegarder le nouveau token
+          localStorage.setItem('token', refreshData.token);
+          console.log('Token rafraîchi avec succès');
+          setError('');
+          return true;
+        }
+      }
+
+      // Si le rafraîchissement a échoué, vérifier si le token actuel est encore valide
+      try {
+        console.log('Vérification manuelle du token...');
+        const tokenParts = token.split('.');
+        if (tokenParts.length === 3) {
+          const payload = JSON.parse(atob(tokenParts[1]));
+          console.log('Payload du token:', payload);
+          const expiryTime = payload.exp * 1000; // convertir en millisecondes
+
+          if (expiryTime > Date.now()) {
+            // Le token n'est pas expiré selon son payload
+            console.log('Token actuel encore valide selon son payload (expire le ' + new Date(expiryTime) + ')');
+            setError('');
+            return true;
+          } else {
+            console.log('Token expiré depuis le ' + new Date(expiryTime));
+          }
+        }
+      } catch (e) {
+        console.error('Erreur lors de la vérification du token:', e);
+      }
+
+      // Si nous arrivons ici, le token est invalide ou expiré et le rafraîchissement a échoué
+      throw new Error('Session expirée et rafraîchissement échoué');
     } catch (error) {
       console.error('Erreur lors du rafraîchissement du token:', error);
-      setError('Impossible de rafraîchir la session. Veuillez vous reconnecter.');
+      setError('Session expirée. Veuillez vous reconnecter pour envoyer des messages.');
       return false;
-    } finally {
-      setIsTokenRefreshing(false);
     }
   };
 
@@ -116,10 +177,18 @@ const ChatBox = ({ socket, consultationId, userId, userName, isOpen, onClose }: 
           // Si c'est une erreur d'authentification, proposer une solution
           if (response.status === 401) {
             // Essayer de récupérer un nouveau token ou rediriger vers la page de connexion
-            setError('Session expirée. Veuillez vous reconnecter ou rafraîchir la page.');
+            setError('Session expirée. Tentative de rafraîchissement...');
 
-            // Option: tenter de rafraîchir le token
-            // await refreshToken();
+            // Tenter de rafraîchir le token
+            const refreshSuccessful = await refreshToken();
+
+            if (refreshSuccessful) {
+              // Réessayer de charger les messages
+              fetchMessages();
+              return;
+            } else {
+              setError('Session expirée. Veuillez vous reconnecter ou rafraîchir la page.');
+            }
 
             setIsLoading(false);
             return;
@@ -287,6 +356,22 @@ const ChatBox = ({ socket, consultationId, userId, userName, isOpen, onClose }: 
         text: messageText
       });
 
+      // Afficher le token pour débogage (masqué partiellement)
+      const tokenPreview = token.length > 10 ?
+        token.substring(0, 5) + '...' + token.substring(token.length - 5) : token;
+      console.log('Token utilisé pour l\'envoi:', tokenPreview);
+
+      // Décoder le token pour vérifier son contenu
+      try {
+        const tokenParts = token.split('.');
+        if (tokenParts.length === 3) {
+          const payload = JSON.parse(atob(tokenParts[1]));
+          console.log('Payload du token pour l\'envoi:', payload);
+        }
+      } catch (e) {
+        console.error('Erreur lors du décodage du token pour l\'envoi:', e);
+      }
+
       const response = await fetch('http://localhost:3000/api/chat-messages', {
         method: 'POST',
         headers: {
@@ -305,16 +390,94 @@ const ChatBox = ({ socket, consultationId, userId, userName, isOpen, onClose }: 
 
         // Si c'est une erreur d'authentification, proposer une solution
         if (response.status === 401) {
-          setError('Session expirée. Veuillez vous reconnecter pour envoyer des messages.');
+          setError('Session expirée. Tentative de rafraîchissement...');
 
-          // Mettre à jour le statut du message en erreur
-          setMessages(prev => prev.map(msg =>
-            msg._id === tempId
-              ? { ...msg, status: 'error' }
-              : msg
-          ));
+          // Tenter de rafraîchir le token
+          const refreshSuccessful = await refreshToken();
 
-          return;
+          if (!refreshSuccessful) {
+            setError('Session expirée. Veuillez vous reconnecter pour envoyer des messages.');
+
+            // Mettre à jour le statut du message en erreur
+            const tempIdToUpdate = tempId; // Capture la valeur actuelle de tempId
+            setMessages(prev => prev.map(msg =>
+              msg._id === tempIdToUpdate
+                ? { ...msg, status: 'error' }
+                : msg
+            ));
+
+            return;
+          }
+
+          // Si le rafraîchissement a réussi, réessayer d'envoyer le message automatiquement
+          setError('Token rafraîchi. Tentative d\'envoi automatique...');
+
+          // Récupérer le nouveau token
+          const newToken = localStorage.getItem('token');
+          if (!newToken) {
+            setError('Token non disponible après rafraîchissement. Veuillez réessayer.');
+            return;
+          }
+
+          console.log('Nouvelle tentative d\'envoi avec le token rafraîchi');
+
+          // Afficher le nouveau token pour débogage (masqué partiellement)
+          const newTokenPreview = newToken.length > 10 ?
+            newToken.substring(0, 5) + '...' + newToken.substring(newToken.length - 5) : newToken;
+          console.log('Nouveau token utilisé pour l\'envoi:', newTokenPreview);
+
+          // Décoder le nouveau token pour vérifier son contenu
+          try {
+            const tokenParts = newToken.split('.');
+            if (tokenParts.length === 3) {
+              const payload = JSON.parse(atob(tokenParts[1]));
+              console.log('Payload du nouveau token pour l\'envoi:', payload);
+            }
+          } catch (e) {
+            console.error('Erreur lors du décodage du nouveau token pour l\'envoi:', e);
+          }
+
+          // Réessayer d'envoyer le message avec le nouveau token
+          try {
+            const retryResponse = await fetch('http://localhost:3000/api/chat-messages', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${newToken}`
+              },
+              body: JSON.stringify({
+                consultationId,
+                text: messageText
+              })
+            });
+
+            console.log('Statut de la réponse après nouvelle tentative:', retryResponse.status);
+
+            if (!retryResponse.ok) {
+              const errorData = await retryResponse.json().catch(() => ({}));
+              console.error('Erreur API lors de la nouvelle tentative:', retryResponse.status, errorData);
+              throw new Error(`Échec de la nouvelle tentative: ${retryResponse.status} - ${errorData.message || 'Erreur inconnue'}`);
+            }
+
+            // Récupérer le message enregistré avec son ID réel
+            const savedMessage = await retryResponse.json();
+            console.log('Message enregistré avec succès après rafraîchissement:', savedMessage);
+
+            // Mettre à jour le message local avec l'ID réel et le statut
+            setMessages(prev => prev.map(msg =>
+              msg._id === tempId
+                ? { ...msg, _id: savedMessage._id, status: 'sent' }
+                : msg
+            ));
+
+            // Effacer le message d'erreur
+            setError('');
+            return;
+          } catch (retryError) {
+            console.error('Erreur lors de la nouvelle tentative:', retryError);
+            setError('Échec de l\'envoi automatique. Veuillez réessayer manuellement.');
+            return;
+          }
         }
 
         throw new Error(`Erreur ${response.status}: ${errorData.message || 'Erreur lors de l\'envoi du message'}`);
@@ -336,11 +499,22 @@ const ChatBox = ({ socket, consultationId, userId, userName, isOpen, onClose }: 
       setError(err.message || 'Impossible d\'envoyer le message');
 
       // Mettre à jour le statut du message en erreur
-      setMessages(prev => prev.map(msg =>
-        msg._id === tempId
-          ? { ...msg, status: 'error' }
-          : msg
-      ));
+      // Rechercher le dernier message envoyé par l'utilisateur actuel avec le statut 'sending'
+      setMessages(prev => {
+        const lastSendingMessage = [...prev].reverse().find(msg =>
+          msg.isCurrentUser && msg.status === 'sending'
+        );
+
+        if (lastSendingMessage && lastSendingMessage._id) {
+          return prev.map(msg =>
+            msg._id === lastSendingMessage._id
+              ? { ...msg, status: 'error' }
+              : msg
+          );
+        }
+
+        return prev;
+      });
     }
   };
 
@@ -383,6 +557,47 @@ const ChatBox = ({ socket, consultationId, userId, userName, isOpen, onClose }: 
                 </button>
               </div>
             )}
+            {error.includes('Token rafraîchi') || error.includes('Échec de l\'envoi automatique') ? (
+              <div className="flex justify-center space-x-2 mt-2">
+                <button
+                  onClick={async () => {
+                    // Effacer le message d'erreur
+                    setError('');
+
+                    // Vérifier si le token est toujours valide
+                    const token = localStorage.getItem('token');
+                    if (!token) {
+                      setError('Aucun token disponible. Veuillez vous reconnecter.');
+                      return;
+                    }
+
+                    // Tenter de rafraîchir le token avant de réessayer
+                    await refreshToken();
+
+                    // Réessayer d'envoyer le message
+                    if (newMessage.trim()) {
+                      await handleSendMessage(new Event('submit') as any);
+                    } else {
+                      // Trouver le dernier message en erreur
+                      const lastErrorMessage = [...messages].reverse().find(msg =>
+                        msg.isCurrentUser && msg.status === 'error'
+                      );
+
+                      if (lastErrorMessage) {
+                        // Réessayer d'envoyer ce message
+                        setNewMessage(lastErrorMessage.text);
+                        setTimeout(() => {
+                          handleSendMessage(new Event('submit') as any);
+                        }, 100);
+                      }
+                    }
+                  }}
+                  className="bg-green-500 text-white px-4 py-1 rounded text-sm hover:bg-green-600"
+                >
+                  Réessayer
+                </button>
+              </div>
+            ) : null}
           </div>
         ) : messages.length === 0 ? (
           <div className="text-gray-500 text-center p-2">Aucun message</div>

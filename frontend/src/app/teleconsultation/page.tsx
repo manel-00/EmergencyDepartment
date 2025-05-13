@@ -216,6 +216,8 @@ function TeleconsultationPage({ userId, userRole }: TeleconsultationPageProps) {
     );
   }
 
+
+
   return (
     <section className="pt-[120px] pb-[90px]">
       <div className="container">
@@ -237,17 +239,29 @@ function TeleconsultationPage({ userId, userRole }: TeleconsultationPageProps) {
                 </button>
 
                 {(userRole === 'medecin' || userRole === 'doctor') && (
-                  <button
-                    onClick={openGoogleCalendar}
-                    className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center"
-                  >
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" viewBox="0 0 24 24" fill="currentColor">
-                      <path d="M19.5 22.5H4.5C3.12 22.5 2 21.38 2 20V6C2 4.62 3.12 3.5 4.5 3.5H5V2H7V3.5H17V2H19V3.5H19.5C20.88 3.5 22 4.62 22 6V20C22 21.38 20.88 22.5 19.5 22.5ZM4.5 8H19.5V6H4.5V8ZM19.5 20V10H4.5V20H19.5Z" />
-                    </svg>
-                    Open Google Calendar
-                  </button>
+                  <div className="flex flex-col sm:flex-row gap-2">
+                    <button
+                      onClick={openGoogleCalendar}
+                      className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center"
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M19.5 22.5H4.5C3.12 22.5 2 21.38 2 20V6C2 4.62 3.12 3.5 4.5 3.5H5V2H7V3.5H17V2H19V3.5H19.5C20.88 3.5 22 4.62 22 6V20C22 21.38 20.88 22.5 19.5 22.5ZM4.5 8H19.5V6H4.5V8ZM19.5 20V10H4.5V20H19.5Z" />
+                      </svg>
+                      Open Google Calendar
+                    </button>
+                    <button
+                      onClick={() => document.getElementById('google-calendar-integration')?.scrollIntoView({ behavior: 'smooth' })}
+                      className="bg-green-600 text-white px-6 py-3 rounded-lg hover:bg-green-700 transition-colors flex items-center justify-center"
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M12 22C6.477 22 2 17.523 2 12S6.477 2 12 2s10 4.477 10 10-4.477 10-10 10zm-1-11v6h2v-6h-2zm0-4v2h2V7h-2z" />
+                      </svg>
+                      Connecter à Google Calendar
+                    </button>
+                  </div>
                 )}
               </div>
+
             </div>
           </div>
         </div>
@@ -439,8 +453,8 @@ function TeleconsultationPage({ userId, userRole }: TeleconsultationPageProps) {
         )}
 
         {/* Google Calendar Integration for doctors */}
-        {userRole === "doctor" && (
-          <div className="mb-10">
+        {(userRole === 'medecin' || userRole === 'doctor') && (
+          <div id="google-calendar-integration" className="mb-10">
             <GoogleCalendarIntegration />
           </div>
         )}
@@ -450,6 +464,7 @@ function TeleconsultationPage({ userId, userRole }: TeleconsultationPageProps) {
         <AppointmentForm
           onSuccess={() => {
             setShowRendezVousForm(false);
+            fetchRendezVous();
           }}
           onCancel={() => setShowRendezVousForm(false)}
         />

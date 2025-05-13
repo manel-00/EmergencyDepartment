@@ -6,6 +6,7 @@ import axios from "axios";
 import Subtitles from "./Subtitles";
 import SubtitlesDemoOverlay from "./SubtitlesDemoOverlay";
 import useSpeechTranslation from "@/hooks/useSpeechTranslation";
+import ChatBox from "./ChatBox";
 
 interface WebRTCRoomProps {
   consultationId: string;
@@ -25,6 +26,8 @@ export default function WebRTCRoom({ consultationId, userId, onEnd }: WebRTCRoom
   const [targetLanguage, setTargetLanguage] = useState("en");
   const [showDemoSubtitles, setShowDemoSubtitles] = useState(false);
   const [showCompletedMessage, setShowCompletedMessage] = useState(false);
+  const [showChat, setShowChat] = useState(false);
+  const [userName, setUserName] = useState<string>("");
   const localVideoRef = useRef<HTMLVideoElement>(null);
   const remoteVideoRef = useRef<HTMLVideoElement>(null);
   const peerConnection = useRef<RTCPeerConnection | null>(null);
@@ -50,6 +53,38 @@ export default function WebRTCRoom({ consultationId, userId, onEnd }: WebRTCRoom
     return () => clearTimeout(timer);
   }, []);
 
+  // Récupérer les informations de l'utilisateur
+  useEffect(() => {
+    const fetchUserInfo = async () => {
+      try {
+        const token = localStorage.getItem('token');
+        if (!token) {
+          console.error("No token found");
+          return;
+        }
+
+        const response = await fetch('http://localhost:3000/api/user/session', {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          if (data.status === 'SUCCESS' && data.user) {
+            // Utiliser le nom complet ou le prénom selon ce qui est disponible
+            const name = data.user.name || data.user.firstname || 'User';
+            setUserName(name);
+          }
+        }
+      } catch (error) {
+        console.error("Error fetching user info:", error);
+      }
+    };
+
+    fetchUserInfo();
+  }, []);
+
   useEffect(() => {
     const initializeWebRTC = async () => {
       try {
@@ -64,7 +99,6 @@ export default function WebRTCRoom({ consultationId, userId, onEnd }: WebRTCRoom
           reconnectionDelay: 1000,
           timeout: 20000
         });
-
         socketIo.on('connect', () => {
           console.log("Connected to signaling server");
           setConnectionStatus("Connected to signaling server");
@@ -81,13 +115,34 @@ export default function WebRTCRoom({ consultationId, userId, onEnd }: WebRTCRoom
         setConnectionStatus("Requesting camera and microphone access...");
 
         // Get local media stream
-        const stream = await navigator.mediaDevices.getUserMedia({
-          video: true,
-          audio: true,
-        });
-        console.log("Media permissions granted");
-        setLocalStream(stream);
-        setConnectionStatus("Media permissions granted");
+        let mediaStream: MediaStream;
+        try {
+          mediaStream = await navigator.mediaDevices.getUserMedia({
+            video: true,
+            audio: true,
+          });
+          console.log("Media permissions granted");
+          setLocalStream(mediaStream);
+          setConnectionStatus("Media permissions granted");
+        } catch (mediaError) {
+          console.error("Media access error:", mediaError);
+
+          // Essayer d'obtenir uniquement l'audio si la vidéo échoue
+          try {
+            console.log("Trying audio only...");
+            mediaStream = await navigator.mediaDevices.getUserMedia({
+              video: false,
+              audio: true,
+            });
+            console.log("Audio-only permissions granted");
+            setLocalStream(mediaStream);
+            setIsVideoEnabled(false);
+            setConnectionStatus("Audio only mode - Camera access denied");
+          } catch (audioError) {
+            console.error("Audio access error:", audioError);
+            throw new Error("Impossible d'accéder à la caméra ou au microphone. Veuillez vérifier vos permissions de navigateur.");
+          }
+        }
 
         // Initialize WebRTC peer connection
         console.log("Creating peer connection...");
@@ -103,9 +158,11 @@ export default function WebRTCRoom({ consultationId, userId, onEnd }: WebRTCRoom
         peerConnection.current = pc;
 
         // Add local stream to peer connection
-        stream.getTracks().forEach((track) => {
-          pc.addTrack(track, stream);
-        });
+        if (mediaStream) {
+          mediaStream.getTracks().forEach((track: MediaStreamTrack) => {
+            pc.addTrack(track, mediaStream);
+          });
+        }
 
         // Handle incoming remote stream
         pc.ontrack = (event) => {
@@ -172,7 +229,9 @@ export default function WebRTCRoom({ consultationId, userId, onEnd }: WebRTCRoom
 
         return () => {
           console.log("Cleaning up...");
-          stream.getTracks().forEach((track) => track.stop());
+          if (mediaStream) {
+            mediaStream.getTracks().forEach((track: MediaStreamTrack) => track.stop());
+          }
           pc.close();
           socketIo.disconnect();
         };
@@ -327,8 +386,47 @@ export default function WebRTCRoom({ consultationId, userId, onEnd }: WebRTCRoom
     );
   }
 
+  // Activer le chat par défaut pour le médecin
+  useEffect(() => {
+    // Vérifier si l'utilisateur est un médecin
+    const checkIfDoctor = async () => {
+      try {
+        const token = localStorage.getItem('token');
+        if (!token) return;
+
+        const response = await fetch('http://localhost:3000/api/user/session', {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          if (data.user && (data.user.role === 'doctor' || data.user.role === 'medecin')) {
+            // Activer automatiquement le chat pour les médecins
+            setShowChat(true);
+          }
+        }
+      } catch (error) {
+        console.error("Error checking user role:", error);
+      }
+    };
+
+    checkIfDoctor();
+  }, []);
+
   return (
     <div className="container mx-auto p-4">
+      {/* Chat Box */}
+      {socket && (
+        <ChatBox
+          socket={socket}
+          consultationId={consultationId}
+          userId={userId}
+          userName={userName || 'User'}
+          isOpen={showChat}
+          onClose={() => setShowChat(false)}
+        />
+      )}
+
       {showCompletedMessage && (
         <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4">
           <div className="bg-white dark:bg-gray-800 rounded-lg max-w-md w-full p-6 shadow-2xl text-center">
@@ -373,12 +471,23 @@ export default function WebRTCRoom({ consultationId, userId, onEnd }: WebRTCRoom
               {connectionStatus}
             </p>
           </div>
-          <button
-            onClick={handleEndConsultation}
-            className="px-6 py-2 bg-red-500 text-white rounded hover:bg-red-600"
-          >
-            End Consultation
-          </button>
+          <div className="flex gap-2">
+            <button
+              onClick={() => setShowChat(!showChat)}
+              className="px-6 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 flex items-center"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-1" viewBox="0 0 20 20" fill="currentColor">
+                <path fillRule="evenodd" d="M18 10c0 3.866-3.582 7-8 7a8.841 8.841 0 01-4.083-.98L2 17l1.338-3.123C2.493 12.767 2 11.434 2 10c0-3.866 3.582-7 8-7s8 3.134 8 7zM7 9H5v2h2V9zm8 0h-2v2h2V9zM9 9h2v2H9V9z" clipRule="evenodd" />
+              </svg>
+              {showChat ? 'Hide Chat' : 'Show Chat'}
+            </button>
+            <button
+              onClick={handleEndConsultation}
+              className="px-6 py-2 bg-red-500 text-white rounded hover:bg-red-600"
+            >
+              End Consultation
+            </button>
+          </div>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

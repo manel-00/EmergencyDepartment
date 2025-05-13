@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Erreur de connexion Google Calendar</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background-color: #f5f5f5;
+        }
+        .container {
+            text-align: center;
+            background-color: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            max-width: 500px;
+        }
+        h1 {
+            color: #EA4335;
+        }
+        .error-icon {
+            font-size: 60px;
+            color: #EA4335;
+            margin-bottom: 20px;
+        }
+        .btn {
+            display: inline-block;
+            background-color: #4285F4;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 5px;
+            text-decoration: none;
+            margin-top: 20px;
+            font-weight: bold;
+        }
+        .btn:hover {
+            background-color: #3367D6;
+        }
+        .error-details {
+            background-color: #f8f8f8;
+            padding: 15px;
+            border-radius: 5px;
+            margin-top: 20px;
+            text-align: left;
+            font-family: monospace;
+            font-size: 14px;
+            color: #555;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="error-icon">✗</div>
+        <h1>Erreur de connexion</h1>
+        <p>Une erreur s'est produite lors de la connexion à Google Calendar.</p>
+        <p id="error-message">Veuillez réessayer ou contacter l'administrateur si le problème persiste.</p>
+
+        <div id="error-details" class="error-details" style="display: none;"></div>
+
+        <a href="http://localhost:5173/teleconsultation" class="btn">Retourner à la téléconsultation</a>
+        <a href="/calendar-instructions.html" class="btn" style="background-color: #34A853; margin-top: 10px;">Voir les instructions</a>
+    </div>
+    <script>
+        // Récupérer les paramètres d'URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const errorMessage = urlParams.get('message');
+        const errorCode = urlParams.get('code');
+
+        // Afficher le message d'erreur s'il existe
+        if (errorMessage) {
+            document.getElementById('error-message').textContent = decodeURIComponent(errorMessage);
+        }
+
+        // Afficher les détails de l'erreur s'ils existent
+        if (errorCode) {
+            const errorDetails = document.getElementById('error-details');
+            errorDetails.style.display = 'block';
+            errorDetails.textContent = `Code d'erreur: ${errorCode}`;
+        }
+
+        // Ajouter un bouton pour réessayer si c'est une erreur d'accès refusé
+        if (errorCode === 'access_denied') {
+            const retryButton = document.createElement('a');
+            retryButton.href = 'http://localhost:3000/api/google-calendar/auth-url';
+            retryButton.className = 'btn';
+            retryButton.style.backgroundColor = '#34A853';
+            retryButton.style.marginLeft = '10px';
+            retryButton.textContent = 'Réessayer';
+            document.querySelector('.btn').parentNode.appendChild(retryButton);
+        }
+
+        // Rediriger automatiquement après 10 secondes
+        setTimeout(function() {
+            window.location.href = 'http://localhost:5173/teleconsultation';
+        }, 10000);
+    </script>
+</body>
+</html>

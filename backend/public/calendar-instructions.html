@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Instructions Google Calendar</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            background-color: #f5f5f5;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+        .container {
+            text-align: center;
+            background-color: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            max-width: 600px;
+            width: 100%;
+        }
+        h1 {
+            color: #4285F4;
+            margin-bottom: 20px;
+        }
+        .info-icon {
+            font-size: 60px;
+            color: #4285F4;
+            margin-bottom: 20px;
+        }
+        .btn {
+            display: inline-block;
+            background-color: #4285F4;
+            color: white;
+            padding: 12px 24px;
+            border-radius: 5px;
+            text-decoration: none;
+            margin-top: 20px;
+            font-weight: bold;
+            font-size: 16px;
+        }
+        .btn:hover {
+            background-color: #3367D6;
+        }
+        .steps {
+            text-align: left;
+            margin: 30px 0;
+        }
+        .steps ol {
+            padding-left: 20px;
+        }
+        .steps li {
+            margin-bottom: 15px;
+            line-height: 1.5;
+        }
+        .note {
+            background-color: #FFF9C4;
+            padding: 15px;
+            border-radius: 5px;
+            margin-top: 20px;
+            text-align: left;
+            font-size: 14px;
+        }
+        .screenshot {
+            max-width: 100%;
+            height: auto;
+            margin: 20px 0;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="info-icon">ℹ️</div>
+        <h1>Instructions pour Google Calendar</h1>
+        <p>Pour connecter votre compte Google Calendar à l'application de téléconsultation, veuillez suivre ces étapes :</p>
+        
+        <div class="steps">
+            <ol>
+                <li>Cliquez sur le bouton "Connecter à Google Calendar" ci-dessous.</li>
+                <li>Sélectionnez le compte Google que vous souhaitez utiliser pour vos rendez-vous de téléconsultation.</li>
+                <li>Sur l'écran d'autorisation, <strong>assurez-vous de cocher toutes les cases</strong> pour permettre à l'application d'accéder à votre calendrier.</li>
+                <li>Cliquez sur "Continuer" ou "Autoriser" pour terminer le processus.</li>
+            </ol>
+        </div>
+        
+        <div class="note">
+            <strong>Note importante :</strong> Si vous avez précédemment refusé l'accès, vous devrez peut-être d'abord révoquer les autorisations précédentes. Pour ce faire, visitez <a href="https://myaccount.google.com/permissions" target="_blank">votre compte Google</a> et supprimez l'application de téléconsultation de la liste des applications connectées.
+        </div>
+        
+        <a href="/api/google-calendar/auth-url" class="btn">Connecter à Google Calendar</a>
+    </div>
+</body>
+</html>

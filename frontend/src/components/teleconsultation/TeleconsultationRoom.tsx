@@ -346,6 +346,8 @@ export default function TeleconsultationRoom({ consultationId, onEnd }: Telecons
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {/* Vidéo locale */}
           <div className="relative aspect-video bg-gray-100 dark:bg-gray-800 rounded-lg overflow-hidden md:col-span-2">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="relative aspect-video bg-gray-100 dark:bg-gray-800 rounded-lg overflow-hidden">
             <video
               ref={videoRef}
               autoPlay
@@ -430,6 +432,10 @@ export default function TeleconsultationRoom({ consultationId, onEnd }: Telecons
               </p>
               <p className="text-body-color dark:text-body-color-dark">
                 Patient: {consultation?.patient?.prenom || consultation?.patient?.name} {consultation?.patient?.nom || consultation?.patient?.lastname}
+                Date: {new Date(consultation?.date).toLocaleString()}
+              </p>
+              <p className="text-body-color dark:text-body-color-dark">
+                Type: {consultation?.typeConsultation}
               </p>
               {consultation?.notes && (
                 <p className="text-body-color dark:text-body-color-dark">

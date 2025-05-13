@@ -216,7 +216,6 @@ function RendezVousPage({ userId, userRole }: RendezVousPageProps) {
     // Autoriser l'accès si l'utilisateur est soit le médecin soit le patient
     if (isMedecin || isPatient) {
       const consultationUrl = new URL('http://localhost:3001/test-video');
-
       // Paramètres de base
       consultationUrl.searchParams.append('consultation', rdv._id);
       consultationUrl.searchParams.append('patient', rdv.patient._id);

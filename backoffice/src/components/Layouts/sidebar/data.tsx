@@ -31,6 +31,7 @@ export const NAV_DATA = [
 
 
 
+      
 
 
       {
@@ -49,7 +50,32 @@ export const NAV_DATA = [
 
 
 
-    {
+    
+      {
+        title: "Speech Recognition",
+        url: "/speechrec",
+        icon: FourCircle,
+        items: [],
+      },
+
+      {
+        title: "Resources",
+        icon: FourCircle,
+        items: [
+          {
+            title: "Speech Recognition",
+            url: "/speechrec",
+          },
+          {
+            title: "demand projections",
+            url: "/resforecasting",
+          },
+        ],
+      },
+
+
+
+    /*  {
         title: "Téléconsultation",
         icon: VideoCameraIcon,
         items: [
@@ -76,6 +102,12 @@ export const NAV_DATA = [
 
 
 
+      },*/
+
+
+     
+    
+     
 
 
       {

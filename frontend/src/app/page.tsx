@@ -24,6 +24,10 @@ import MesFactures from "./facture/mes-factures/page";
 import Link from "next/link";
 
 
+
+import Symptomes from "@/components/Symptomes";
+
+
 const Home: React.FC = () => {
   const [role, setRole] = useState<string | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
@@ -119,10 +123,22 @@ const Home: React.FC = () => {
       <ScrollUp />
       {role === "doctor" ? <TablePage /> : <Hero />}
 
+      
       {/* Conditional Rendering for Patients */}
       {role === "patient" && <MesFactures/>}
       {role === "doctor" && <FacturePage />}
       {role === "patient" && <Chatbot />}
+
+      
+      {role === "patient" && <Symptomes/>}
+
+
+
+
+
+
+
+
       {role === "patient" && <AppointmentList />} {/* Show AppointmentList for patient */}
       {role === "doctor" && <AppointmentListDoctor />} {/* Show AppointmentListDoctor for doctor */}
       {role === "patient" && <Doctors />}
@@ -147,6 +163,9 @@ const Home: React.FC = () => {
         </div>
       )}
 
+        <button onClick={navigateToAppointment}>Make Appointment</button>
+      
+      
     </>
   );
 };

@@ -18,8 +18,8 @@ exports.createRendezVous = async (req, res) => {
             });
         }
 
-        // Vérifier que l'ID utilisateur existe
-        if (!req.user._id) {
+        // Vérifier que l'ID utilisateur existe (soit _id soit userId)
+        if (!req.user._id && !req.user.userId) {
             console.error('ID utilisateur manquant dans le token');
             console.error('Contenu du token:', req.user);
             return res.status(401).json({
@@ -28,7 +28,9 @@ exports.createRendezVous = async (req, res) => {
         }
 
         // Convertir l'ID en chaîne si ce n'est pas déjà le cas
-        const userId = req.user._id.toString ? req.user._id.toString() : String(req.user._id);
+        const userId = req.user._id
+            ? (req.user._id.toString ? req.user._id.toString() : String(req.user._id))
+            : req.user.userId;
 
         // Déterminer le rôle de l'utilisateur
         const userRole = req.user.role || 'patient'; // Par défaut, considérer comme patient
@@ -211,7 +213,7 @@ exports.getAllRendezVous = async (req, res) => {
             });
         }
 
-        if (!req.user._id) {
+        if (!req.user._id && !req.user.userId) {
             console.log('⚠️ ID utilisateur manquant dans req.user - mode débogage activé');
             req.user = {
                 _id: 'debug-user',
@@ -227,8 +229,10 @@ exports.getAllRendezVous = async (req, res) => {
         let userId = 'debug-user';
         let userRole = 'debug';
 
-        if (req.user._id) {
-            userId = req.user._id.toString ? req.user._id.toString() : String(req.user._id);
+        if (req.user._id || req.user.userId) {
+            userId = req.user._id
+                ? (req.user._id.toString ? req.user._id.toString() : String(req.user._id))
+                : req.user.userId;
             userRole = req.user.role || 'patient';
         }
         let query = {};
@@ -454,14 +458,16 @@ exports.getRendezVousById = async (req, res) => {
 // Mettre à jour un rendez-vous
 exports.updateRendezVous = async (req, res) => {
     try {
-        // Vérifier que req.user et req.user._id existent
-        if (!req.user || !req.user._id) {
+        // Vérifier que req.user et (req.user._id ou req.user.userId) existent
+        if (!req.user || (!req.user._id && !req.user.userId)) {
             return res.status(401).json({
                 message: 'Utilisateur non authentifié ou ID utilisateur manquant'
             });
         }
 
-        const userId = req.user._id.toString();
+        const userId = req.user._id
+            ? req.user._id.toString()
+            : req.user.userId;
         const userRole = req.user.role;
 
         // Get the rendez-vous before update to check if it has a Google Calendar event
@@ -574,14 +580,16 @@ exports.updateRendezVous = async (req, res) => {
 // Supprimer un rendez-vous
 exports.deleteRendezVous = async (req, res) => {
     try {
-        // Vérifier que req.user et req.user._id existent
-        if (!req.user || !req.user._id) {
+        // Vérifier que req.user et (req.user._id ou req.user.userId) existent
+        if (!req.user || (!req.user._id && !req.user.userId)) {
             return res.status(401).json({
                 message: 'Utilisateur non authentifié ou ID utilisateur manquant'
             });
         }
 
-        const userId = req.user._id.toString();
+        const userId = req.user._id
+            ? req.user._id.toString()
+            : req.user.userId;
         const userRole = req.user.role;
 
         // Get the rendez-vous before deletion to check if it has a Google Calendar event
@@ -640,14 +648,16 @@ exports.deleteRendezVous = async (req, res) => {
 // Obtenir les rendez-vous d'un médecin
 exports.getRendezVousByMedecin = async (req, res) => {
     try {
-        // Vérifier que req.user et req.user._id existent
-        if (!req.user || !req.user._id) {
+        // Vérifier que req.user et (req.user._id ou req.user.userId) existent
+        if (!req.user || (!req.user._id && !req.user.userId)) {
             return res.status(401).json({
                 message: 'Utilisateur non authentifié ou ID utilisateur manquant'
             });
         }
 
-        const userId = req.user._id.toString();
+        const userId = req.user._id
+            ? req.user._id.toString()
+            : req.user.userId;
         const userRole = req.user.role;
         const medecinId = req.params.medecinId;
 
@@ -695,14 +705,16 @@ exports.getRendezVousByMedecin = async (req, res) => {
 // Obtenir les rendez-vous d'un patient
 exports.getRendezVousByPatient = async (req, res) => {
     try {
-        // Vérifier que req.user et req.user._id existent
-        if (!req.user || !req.user._id) {
+        // Vérifier que req.user et (req.user._id ou req.user.userId) existent
+        if (!req.user || (!req.user._id && !req.user.userId)) {
             return res.status(401).json({
                 message: 'Utilisateur non authentifié ou ID utilisateur manquant'
             });
         }
 
-        const userId = req.user._id.toString();
+        const userId = req.user._id
+            ? req.user._id.toString()
+            : req.user.userId;
         const userRole = req.user.role;
         const patientId = req.params.patientId;
 
@@ -772,14 +784,16 @@ exports.getRendezVousByPatient = async (req, res) => {
 // Confirmer un rendez-vous
 exports.confirmerRendezVous = async (req, res) => {
     try {
-        // Vérifier que req.user et req.user._id existent
-        if (!req.user || !req.user._id) {
+        // Vérifier que req.user et (req.user._id ou req.user.userId) existent
+        if (!req.user || (!req.user._id && !req.user.userId)) {
             return res.status(401).json({
                 message: 'Utilisateur non authentifié ou ID utilisateur manquant'
             });
         }
 
-        const userId = req.user._id.toString();
+        const userId = req.user._id
+            ? req.user._id.toString()
+            : req.user.userId;
         const userRole = req.user.role;
 
         // Vérifier d'abord si le rendez-vous existe
@@ -825,14 +839,16 @@ exports.confirmerRendezVous = async (req, res) => {
 // Annuler un rendez-vous
 exports.annulerRendezVous = async (req, res) => {
     try {
-        // Vérifier que req.user et req.user._id existent
-        if (!req.user || !req.user._id) {
+        // Vérifier que req.user et (req.user._id ou req.user.userId) existent
+        if (!req.user || (!req.user._id && !req.user.userId)) {
             return res.status(401).json({
                 message: 'Utilisateur non authentifié ou ID utilisateur manquant'
             });
         }
 
-        const userId = req.user._id.toString();
+        const userId = req.user._id
+            ? req.user._id.toString()
+            : req.user.userId;
         const userRole = req.user.role;
 
         // Vérifier d'abord si le rendez-vous existe

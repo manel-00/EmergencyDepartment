@@ -12,10 +12,20 @@ exports.createMessage = async (req, res) => {
     console.log('Création de message - req.user:', req.user);
 
     // Vérifier que req.user existe et contient les informations nécessaires
-    if (!req.user || !req.user._id) {
-      console.error('Erreur: req.user ou req.user._id est manquant', req.user);
+    if (!req.user) {
+      console.error('Erreur: req.user est manquant');
       return res.status(401).json({ message: 'Utilisateur non authentifié correctement' });
     }
+
+    // Utiliser userId ou _id selon ce qui est disponible
+    const userId = req.user.userId || req.user._id;
+    if (!userId) {
+      console.error('Erreur: ID utilisateur manquant dans le token', req.user);
+      return res.status(401).json({ message: 'Token invalide - ID utilisateur manquant' });
+    }
+
+    // Assigner l'ID utilisateur pour une utilisation ultérieure
+    req.user._id = userId;
 
     // Déterminer le nom de l'expéditeur en fonction des propriétés disponibles
     let senderName = 'Utilisateur';

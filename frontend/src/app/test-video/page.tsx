@@ -105,7 +105,6 @@ export default function TeleconsultationRoom() {
         });
 
         console.log('Patient response status:', patientResponse.status);
-
         if (!patientResponse.ok) {
           console.error('Patient fetch error:', await patientResponse.text());
           setParticipantNames(prev => ({
@@ -208,7 +207,6 @@ export default function TeleconsultationRoom() {
       console.log('Connected to Socket.IO server with ID:', socketRef.current.id);
       setIsConnected(true);
       setConnectionStatus('Connected to server');
-
       // Rejoindre la salle de consultation
       socketRef.current.emit('join-room', {
         consultationId,
@@ -230,7 +228,6 @@ export default function TeleconsultationRoom() {
     socketRef.current.on('user-connected', async (data: any) => {
       console.log('User connected to room:', data);
       setConnectionStatus('Other participant connected');
-
       // Si on est l'initiateur, on déclenche la négociation
       if (searchParams.get('initiator') === userRole && peerConnectionRef.current) {
         try {
@@ -314,7 +311,6 @@ export default function TeleconsultationRoom() {
         if (peerConnectionRef.current) {
           console.log('Setting remote description from offer');
           await peerConnectionRef.current.setRemoteDescription(new RTCSessionDescription(offer));
-
           // S'assurer que le flux local est ajouté avant de créer la réponse
           if (!localStreamRef.current) {
             console.log('Waiting for local stream before creating answer...');
@@ -413,7 +409,6 @@ export default function TeleconsultationRoom() {
           const state = peerConnectionRef.current.connectionState;
           console.log('WebRTC connection state changed:', state);
           setConnectionStatus(`Connection state: ${state}`);
-
           // Si la connexion échoue, on essaie de la rétablir
           if (state === 'failed' && searchParams.get('initiator') === userRole) {
             console.log('Connection failed, attempting to restart ICE');
@@ -448,7 +443,6 @@ export default function TeleconsultationRoom() {
           },
           audio: true
         });
-
         console.log('Local stream obtained:', stream.id);
         localStreamRef.current = stream;
         if (localVideoRef.current) {

@@ -8,17 +8,18 @@ const passport = require('passport');
 const cors = require("cors");
 const cookieParser = require("cookie-parser");
 const MongoStore = require("connect-mongo");
+const axios = require('axios');
 require('dotenv').config();
 const mongoose = require('mongoose');
 const http = require('http');
+const fs = require('fs');
+const path = require('path');
+const socketIo = require('socket.io');
+const { spawn } = require("child_process");
+
 // ✅ Initialize Express app
 const app = express();
 const port = 3000;
-const socketIo = require('socket.io');
-const consultationRouter = require('./api/routes/consultationRoutes');
-const rendezVousRouter = require('./api/routes/rendezVousRoutes');
-const statisticsRouter = require('./api/routes/statisticsRoutes');
-const chatMessageRouter = require('./api/routes/chatMessageRoutes');
 
 // ✅ Import routes
 const UserRouter = require('./api/User');
@@ -27,31 +28,48 @@ const DocumentRouter = require('./api/Document');
 const chatRouter = require('./api/chat');
 const makeappointmentRouter = require('./api/makeappointment');
 const SpecialiteRouter = require('./api/Specialite');
+const consultationRouter = require('./api/routes/consultationRoutes');
+const rendezVousRouter = require('./api/routes/rendezVousRoutes');
+const statisticsRouter = require('./api/routes/statisticsRoutes');
+const chatMessageRouter = require('./api/routes/chatMessageRoutes');
+const mortalityRouter = require('./routes/mortality');
 const paiementRouter = require('./api/routes/paiementRoutes');
 const googleCalendarRouter = require('./api/routes/googleCalendarRoutes');
+const classificationRouter = require('./api/Classification');
+const MaladiepredictionRouter = require('./api/Maladieprediction');
+
+// ✅ Configure CORS
 app.use(cors({
   origin: ["http://localhost:5173", "http://localhost:3001", "http://localhost:3002"],
   credentials: true
 }));
+
+// ✅ Create HTTP server from Express app
 const server = http.createServer(app);
+
+// ✅ Initialize Socket.IO with the HTTP server
 const io = socketIo(server, {
   cors: {
     origin: ["http://localhost:3000", "http://localhost:3001", "http://localhost:3002"],
     methods: ["GET", "POST"]
   }
 });
+
 // ✅ Middlewares
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
-app.use(express.static('public')); // Servir les fichiers statiques depuis le dossier public
+app.use(express.static('public')); // Servir les fichiers statiques
 
-// ✅ Configure session with memory store (for development only)
+// ✅ Configure session with MongoDB store
 app.use(session({
   secret: process.env.SESSION_SECRET || 'supersecretkey',
   resave: false,
-  saveUninitialized: true,
-  // Pas de store configuré = utilisation du stockage en mémoire par défaut
+  saveUninitialized: false,
+ // store: MongoStore.create({
+   // mongoUrl: "mongodb://localhost:27017/EmergencyMangment",
+   // ttl: 24 * 60 * 60 // 1-day session expiry
+  //}),
   cookie: {
     httpOnly: true,
     secure: false, // Set to true in production with HTTPS
@@ -66,6 +84,11 @@ app.get("/test-session", (req, res) => {
   res.json({ message: "Session saved!", session: req.session });
 });
 
+// Route spéciale pour le callback Google Calendar
+// Cette route doit être définie AVANT les autres routes pour éviter le middleware d'authentification
+const googleCalendarController = require('./api/controllers/googleCalendarController');
+app.get('/auth/google/callback', googleCalendarController.handleCallback);
+
 // ✅ Routes
 app.use('/user', UserRouter);
 app.use('/room', RoomRouter);
@@ -79,12 +102,11 @@ app.use('/api/rendez-vous', rendezVousRouter);
 app.use('/api/google-calendar', googleCalendarRouter);
 app.use('/api/statistics', statisticsRouter);
 app.use('/api/chat-messages', chatMessageRouter);
+app.use('/api/mortality', mortalityRouter);
+app.use('/classification', classificationRouter);
+app.use('/symptomes', MaladiepredictionRouter);
 
-// Route spéciale pour le callback Google Calendar
-// Cette route doit être définie AVANT les autres routes pour éviter le middleware d'authentification
-const googleCalendarController = require('./api/controllers/googleCalendarController');
-app.get('/auth/google/callback', googleCalendarController.handleCallback);
-
+// ✅ Socket.IO connection handling
 io.on('connection', (socket) => {
   console.log('User connected:', socket.id);
 
@@ -138,10 +160,6 @@ io.on('connection', (socket) => {
     // Broadcast the message to everyone in the room except the sender
     socket.to(`chat-${consultationId}`).emit('chat-message', enhancedMessage);
 
-    // Enregistrer le message dans la base de données (optionnel, car déjà géré côté client)
-    // Cela pourrait être utile si on veut s'assurer que tous les messages sont enregistrés
-    // même en cas d'échec de la requête HTTP côté client
-
     // Envoyer une confirmation au client qui a envoyé le message
     socket.emit('chat-message-sent', {
       success: true,
@@ -169,7 +187,6 @@ io.on('connection', (socket) => {
     if (roomId) {
       socket.to(roomId).emit('answer', answer, userId);
     } else if (answer && answer.consultationId) {
-      // Handle case where answer is sent as an object with consultationId
       socket.to(answer.consultationId).emit('answer', answer);
       console.log(`Forwarded answer to room ${answer.consultationId}`);
     } else {
@@ -178,11 +195,12 @@ io.on('connection', (socket) => {
   });
 
   socket.on('ice-candidate', (candidate, roomId, userId) => {
+    console.log(`Received ICE candidate from ${userId || 'unknown'} for room ${roomId || 'unknown'}`);
     if (roomId) {
       socket.to(roomId).emit('ice-candidate', candidate, userId);
     } else if (candidate && candidate.consultationId) {
-      // Handle case where candidate is sent as an object with consultationId
       socket.to(candidate.consultationId).emit('ice-candidate', candidate);
+      console.log(`Forwarded ICE candidate to room ${candidate.consultationId}`);
     } else {
       console.error('No room ID provided for ICE candidate');
     }
@@ -207,7 +225,8 @@ io.on('connection', (socket) => {
     });
   });
 });
-// ✅ Start server with Socket.IO
+
+// ✅ Start the server (Express + Socket.IO)
 server.listen(port, () => {
   console.log(`✅ Server is running on port ${port}`);
 });

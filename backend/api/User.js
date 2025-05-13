@@ -50,15 +50,27 @@ transporter.verify((error, success) => {
 
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
+    // Utiliser un chemin relatif au lieu d'un chemin absolu
     const frontendImagesPath = path.join(
-      'C:/Users/Manel/Downloads/2nd template/frontend/public/images'
-
+      __dirname, '../../frontend/public/images'
     );
 
+    console.log('Chemin de sauvegarde des images:', frontendImagesPath);
 
     // Vérifie si le dossier existe, sinon le crée
     if (!fs.existsSync(frontendImagesPath)) {
-      fs.mkdirSync(frontendImagesPath, { recursive: true });
+      try {
+        fs.mkdirSync(frontendImagesPath, { recursive: true });
+        console.log('Dossier images créé avec succès');
+      } catch (error) {
+        console.error('Erreur lors de la création du dossier images:', error);
+        // Utiliser un dossier de secours
+        const backupPath = path.join(__dirname, '../../backend/public/images');
+        if (!fs.existsSync(backupPath)) {
+          fs.mkdirSync(backupPath, { recursive: true });
+        }
+        return cb(null, backupPath);
+      }
     }
     cb(null, frontendImagesPath);  // Sauvegarde dans le dossier d'images frontend
   },
@@ -70,18 +82,24 @@ const storage = multer.diskStorage({
 
 const storagedc = multer.diskStorage({
   destination: (req, file, cb) => {
-    const frontendImagesPath = path2.join(
-
-      'C:/Users/Manel/Downloads/2nd template/backoffice/public/images'
-
+    // Utiliser un chemin relatif au lieu d'un chemin absolu
+    const backofficeImagesPath = path2.join(
+      __dirname, '../../backend/public/images'
     );
 
-      // Vérifie si le dossier existe, sinon le crée
-      if (!fs.existsSync(frontendImagesPath)) {
-        fs.mkdirSync(frontendImagesPath, { recursive: true });
+    console.log('Chemin de sauvegarde des images backoffice:', backofficeImagesPath);
+
+    // Vérifie si le dossier existe, sinon le crée
+    if (!fs.existsSync(backofficeImagesPath)) {
+      try {
+        fs.mkdirSync(backofficeImagesPath, { recursive: true });
+        console.log('Dossier images backoffice créé avec succès');
+      } catch (error) {
+        console.error('Erreur lors de la création du dossier images backoffice:', error);
       }
-      cb(null, frontendImagesPath);  // Sauvegarde dans le dossier d'images frontend
-    },
+    }
+    cb(null, backofficeImagesPath);  // Sauvegarde dans le dossier d'images backend
+  },
     filename: (req, file, cb) => {
       const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
       cb(null, 'image-' + uniqueSuffix + path2.extname(file.originalname)); // Nouveau nom pour l'image
@@ -336,14 +354,7 @@ router.post("/verifyOTP", async (req, res) => {
 
       // ✅ Generate JWT Token (valid for 7 days)
       const token = jwt.sign(
-          {
-              _id: user._id,
-              userId: user._id,
-              email: user.email,
-              role: user.role,
-              name: user.name,
-              lastname: user.lastname
-          },
+          { userId: user._id, email: user.email, role: user.role },
           process.env.JWT_SECRET,
           { expiresIn: "7d" }
       );
@@ -379,6 +390,7 @@ router.post("/verifyOTP", async (req, res) => {
           },
       });
 
+
   } catch (error) {
       console.error("❌ Error verifying OTP:", error);
       res.status(400).json({
@@ -387,6 +399,7 @@ router.post("/verifyOTP", async (req, res) => {
       });
   }
 });
+
 
 
 
@@ -448,6 +461,156 @@ router.get("/session", async (req, res) => {
   } catch (error) {
     console.error("❌ Session retrieval failed:", error);
     return res.status(500).json({ status: "FAILED", message: "Session retrieval failed" });
+  }
+});
+
+// ✅ Endpoint pour vérifier la validité d'une session
+router.get("/check-session", async (req, res) => {
+  try {
+    // Récupérer le token depuis les cookies ou les headers
+    const token = req.cookies.token || req.headers.authorization?.split(" ")[1];
+
+    if (!token) {
+      return res.status(401).json({ status: "FAILED", message: "No token provided" });
+    }
+
+    try {
+      // Vérifier la validité du token
+      const decoded = jwt.verify(token, process.env.JWT_SECRET);
+
+      // Vérifier si l'utilisateur existe toujours
+      const user = await User.findById(decoded.userId).select("-password");
+      if (!user) {
+        return res.status(401).json({ status: "FAILED", message: "User not found" });
+      }
+
+      // Session valide
+      return res.json({
+        status: "SUCCESS",
+        message: "Session is valid",
+        user: {
+          userId: user._id,
+          name: user.name,
+          lastname: user.lastname,
+          email: user.email,
+          role: user.role
+        }
+      });
+    } catch (jwtError) {
+      // Token invalide ou expiré
+      console.error("❌ JWT verification failed:", jwtError);
+      return res.status(401).json({ status: "FAILED", message: "Invalid or expired token" });
+    }
+  } catch (error) {
+    console.error("❌ Check session failed:", error);
+    return res.status(500).json({ status: "FAILED", message: "Failed to check session" });
+  }
+});
+
+// ✅ Endpoint pour rafraîchir un token
+router.post("/refresh-token", async (req, res) => {
+  try {
+    // Récupérer le token depuis les cookies, les headers ou le body
+    const token = req.cookies.token || req.headers.authorization?.split(" ")[1] || req.body.token;
+
+    if (!token) {
+      return res.status(401).json({ status: "FAILED", message: "No token provided" });
+    }
+
+    try {
+      // Vérifier la validité du token actuel
+      const decoded = jwt.verify(token, process.env.JWT_SECRET, { ignoreExpiration: true });
+
+      // Vérifier si l'utilisateur existe toujours
+      const user = await User.findById(decoded.userId).select("-password");
+      if (!user) {
+        return res.status(401).json({ status: "FAILED", message: "User not found" });
+      }
+
+      // Générer un nouveau token
+      const newToken = jwt.sign(
+        { userId: user._id, email: user.email, role: user.role },
+        process.env.JWT_SECRET,
+        { expiresIn: "7d" }
+      );
+
+      // Mettre à jour le cookie
+      res.cookie("token", newToken, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: "lax",
+        maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+      });
+
+      // Retourner le nouveau token
+      return res.json({
+        status: "SUCCESS",
+        message: "Token refreshed successfully",
+        token: newToken,
+        user: {
+          userId: user._id,
+          name: user.name,
+          lastname: user.lastname,
+          email: user.email,
+          role: user.role
+        }
+      });
+    } catch (jwtError) {
+      // Si le token est complètement invalide (pas seulement expiré)
+      if (jwtError.name !== 'TokenExpiredError') {
+        console.error("❌ JWT verification failed:", jwtError);
+        return res.status(401).json({ status: "FAILED", message: "Invalid token format" });
+      }
+
+      try {
+        // Essayer de décoder le token expiré
+        const decoded = jwt.decode(token);
+        if (!decoded || !decoded.userId) {
+          return res.status(401).json({ status: "FAILED", message: "Invalid token payload" });
+        }
+
+        // Vérifier si l'utilisateur existe toujours
+        const user = await User.findById(decoded.userId).select("-password");
+        if (!user) {
+          return res.status(401).json({ status: "FAILED", message: "User not found" });
+        }
+
+        // Générer un nouveau token
+        const newToken = jwt.sign(
+          { userId: user._id, email: user.email, role: user.role },
+          process.env.JWT_SECRET,
+          { expiresIn: "7d" }
+        );
+
+        // Mettre à jour le cookie
+        res.cookie("token", newToken, {
+          httpOnly: true,
+          secure: process.env.NODE_ENV === "production",
+          sameSite: "lax",
+          maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+        });
+
+        // Retourner le nouveau token
+        return res.json({
+          status: "SUCCESS",
+          message: "Token refreshed successfully from expired token",
+          token: newToken,
+          user: {
+            userId: user._id,
+            name: user.name,
+            lastname: user.lastname,
+            email: user.email,
+            role: user.role
+          }
+        });
+      } catch (decodeError) {
+        console.error("❌ Token decode failed:", decodeError);
+        return res.status(401).json({ status: "FAILED", message: "Failed to decode expired token" });
+      }
+    }
+  } catch (error) {
+    console.error("❌ Token refresh failed:", error);
+    return res.status(500).json({ status: "FAILED", message: "Failed to refresh token" });
   }
 });
 
@@ -649,6 +812,7 @@ router.post("/resetPassword", async (req, res) => {
 router.post('/addDoctor', uploaddc.single('image'), (req, res) => {
     const { name, lastname, email, specialty, password } = req.body;
 
+
     // Vérification des champs requis
     if (![name, lastname, email, specialty, password].every(Boolean)) {
       return res.json({ status: 'failed', message: 'Please fill all the fields' });
@@ -663,6 +827,7 @@ router.post('/addDoctor', uploaddc.single('image'), (req, res) => {
       return res.json({ status: 'failed', message: 'Invalid email address' });
     }
 
+
     // Vérifier si l'email existe déjà
     User.findOne({ email }).then(existingDoctor => {
       if (existingDoctor) {
@@ -674,7 +839,6 @@ router.post('/addDoctor', uploaddc.single('image'), (req, res) => {
         if (!specialtyDoc) {
           return res.json({ status: 'failed', message: 'Specialty not found' });
         }
-
         // Hachage du mot de passe
         bcrypt.hash(password, 10).then(hashedPassword => {
           const newDoctor = new User({
@@ -688,7 +852,6 @@ router.post('/addDoctor', uploaddc.single('image'), (req, res) => {
             verified: true,
             creationDate: new Date().toISOString(),  // Date de création par défaut
           });
-
           newDoctor.save().then(result => {
             // 📩 Envoi du SMS après ajout du médecin
             client.messages.create({
@@ -716,7 +879,6 @@ router.post('/addDoctor', uploaddc.single('image'), (req, res) => {
       res.json({ status: 'failed', message: 'Database error' });
     });
 });
-
 router.get("/getDoctors", async (req, res) => {
   try {
     const doctors = await User.find({ role: "doctor" }).lean(); // Objets JS simples
@@ -954,14 +1116,7 @@ router.post("/face-login", upload.single("image"), async (req, res) => {
 
           // Générer un token JWT
           const token = jwt.sign(
-            {
-              _id: user._id,
-              userId: user._id,
-              email: user.email,
-              role: user.role,
-              name: user.name,
-              lastname: user.lastname
-            },
+            { userId: user._id, email: user.email, role: user.role },
             process.env.JWT_SECRET,
             { expiresIn: "7d" }
           );

@@ -15,4 +15,10 @@ router.post('/toggle', auth, googleCalendarController.toggleCalendarIntegration)
 // Get integration status - requires authentication
 router.get('/status', auth, googleCalendarController.getIntegrationStatus);
 
+// Force reauthorization - requires authentication
+router.post('/reauthorize', auth, googleCalendarController.forceReauthorization);
+
+// Test Google Calendar integration - requires authentication
+router.get('/test', auth, googleCalendarController.testCalendarIntegration);
+
 module.exports = router;

@@ -2,41 +2,36 @@ const jwt = require('jsonwebtoken');
 
 const auth = async (req, res, next) => {
     try {
-        // Récupérer le token depuis le header Authorization
-        const token = req.header('Authorization')?.replace('Bearer ', '');
+        // Récupérer le token depuis le header Authorization ou les cookies
+        let token = req.cookies?.token;
+
+        // Si pas de token dans les cookies, essayer le header Authorization
+        if (!token) {
+            const authHeader = req.header('Authorization');
+            if (authHeader) {
+                // Gérer les deux formats possibles: "Bearer <token>" ou juste "<token>"
+                token = authHeader.startsWith('Bearer ') ? authHeader.replace('Bearer ', '') : authHeader;
+            }
+        }
 
         if (!token) {
+            console.log('❌ Middleware auth: Token manquant');
             return res.status(401).json({ message: 'Accès non autorisé. Token manquant.' });
         }
 
-        try {
-            // Vérifier et décoder le token
-            const decoded = jwt.verify(token, process.env.JWT_SECRET);
-            console.log('Token décodé:', decoded);
+        // Vérifier et décoder le token
+        const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
-            // Normaliser l'objet utilisateur pour s'assurer que req.user._id existe
-            const normalizedUser = {
-                ...decoded,
-                _id: decoded._id || decoded.userId || decoded.id || decoded.sub
-            };
+        // Ajouter l'utilisateur décodé à la requête
+        req.user = decoded;
 
-            // Vérifier que le token décodé contient un ID utilisateur
-            if (!normalizedUser._id) {
-                console.error('Token décodé invalide - pas d\'ID utilisateur:', decoded);
-                return res.status(401).json({ message: 'Token invalide: informations utilisateur manquantes.' });
-            }
+        // Log pour le débogage
+        console.log(`✅ Middleware auth: Utilisateur authentifié - ID: ${decoded.userId || decoded._id}, Role: ${decoded.role}`);
 
-            // Ajouter l'utilisateur décodé normalisé à la requête
-            req.user = normalizedUser;
-            console.log('Utilisateur authentifié:', req.user);
-            next();
-        } catch (jwtError) {
-            console.error('Erreur de vérification JWT:', jwtError);
-            return res.status(401).json({ message: 'Token invalide ou expiré.' });
-        }
+        next();
     } catch (error) {
-        console.error('Erreur d\'authentification:', error);
-        res.status(500).json({ message: 'Erreur serveur lors de l\'authentification.' });
+        console.error('❌ Middleware auth: Erreur de vérification du token', error.message);
+        res.status(401).json({ message: 'Accès non autorisé. Token invalide.' });
     }
 };
 
