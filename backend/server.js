@@ -226,6 +226,36 @@ io.on('connection', (socket) => {
   });
 });
 
+
+
+app.post('/api/analyze-symptoms', (req, res) => {
+  const { symptoms } = req.body;
+  if (!symptoms) {
+    return res.status(400).json({ error: 'symptoms is required' });
+  }
+
+  // Make sure this path matches your folder structure!
+  const intentsPath = path.join(__dirname, 'data', 'intents.json');
+  if (!fs.existsSync(intentsPath)) {
+    return res.status(500).json({ error: 'intents.json file not found' });
+  }
+
+  const intents = JSON.parse(fs.readFileSync(intentsPath, 'utf8'));
+  const responses = [];
+
+  for (const intent of intents.intents) {
+    for (const pattern of intent.patterns) {
+      if (symptoms.toLowerCase().includes(pattern.toLowerCase())) {
+        responses.push(intent.responses[0]);
+        break;
+      }
+    }
+  }
+
+  res.json({ responses });
+});
+
+
 // ✅ Start the server (Express + Socket.IO)
 server.listen(port, () => {
   console.log(`✅ Server is running on port ${port}`);
